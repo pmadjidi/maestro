@@ -1,0 +1,24 @@
+syntax = "proto3";
+package api;
+
+enum Status {
+    SUCCESS = 0;
+    FAIL = 1;
+    BLOCKED = 2;
+    DELETED = 3;
+    CREATED = 4;
+    TIMEOUT = 5;
+    ERROR = 6;
+    NOTFOUND = 7;
+    INVALID_PASSWORD = 8;
+    INVALID_FIRSTNAME = 9;
+    INVALID_LASTNAME = 10;
+    INVALID_EMAIL = 11;
+    INVALID_PHONE = 12;
+    INVALID_ADRESS = 13;
+    INVALID_DEVICE= 14;
+    INVALID_USERNAME = 15;
+    VALIDATED = 16;
+    EXITSTS = 17;
+    MAXIMUN_NUMBER_OF_USERS_REACHED = 18;
+}

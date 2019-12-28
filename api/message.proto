@@ -1,0 +1,23 @@
+syntax = "proto3";
+package api;
+
+import "status.proto";
+
+message Req{
+    string id = 1;
+    repeated string text = 2;
+    repeated bytes pic = 3;
+    string parentId = 4;
+    string topic = 5;
+}
+
+
+message Resp{
+    string id = 1;
+    Status status = 2;
+}
+
+
+service Maestro {
+    rpc Chatt(stream Req) returns (stream Resp);
+}

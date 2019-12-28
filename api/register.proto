@@ -1,0 +1,32 @@
+syntax = "proto3";
+package api;
+
+import "status.proto";
+
+message RegisterReq{
+    string userName = 1;
+    bytes passWord = 2;
+    string firstName = 3;
+    string lastName = 4;
+    string email = 5;
+    string phone = 6;
+    message Address {
+        string street = 1;
+        string city = 2;
+        string state = 3;
+        string zip = 4;
+      }
+    Address address = 7;
+    string device = 8;
+}
+
+
+message RegisterResp{
+    string id = 1;
+    Status status = 2;
+}
+
+
+service Register {
+    rpc Register(RegisterReq) returns (RegisterResp);
+}

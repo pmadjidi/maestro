@@ -1,0 +1,20 @@
+syntax = "proto3";
+package api;
+
+import "status.proto";
+
+
+message DeviceReq{
+    string deviceId = 1;
+    string deviceKey = 2;
+}
+
+
+message DeviceResp{
+    Status status = 1;
+}
+
+
+service Device {
+    rpc Register(DeviceReq) returns (DeviceResp);
+}

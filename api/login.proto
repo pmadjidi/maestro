@@ -1,0 +1,23 @@
+syntax = "proto3";
+package api;
+
+import "status.proto";
+
+message LoginReq{
+    string id = 1;
+    string userName = 2;
+    bytes passWord = 3;
+    string device = 4;
+}
+
+
+message LoginResp{
+    string id  = 1;
+    string key = 2;
+    Status status = 3;
+}
+
+
+service Login {
+    rpc Authenticate(LoginReq) returns (LoginResp);
+} 
