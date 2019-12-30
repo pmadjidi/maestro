@@ -9,7 +9,6 @@ const (
 	BLOCKED    = 4
 	EXTERNAL = 8
 	SUPERUSER = 16
-
 )
 
 
@@ -25,10 +24,7 @@ func NewFlag() *Flag {
 }
 
 func (f *Flag) Is(flag uint)  bool {
-	if f.val & flag == 1 {
-		return true
-	}
-	return false
+	return f.val & flag != 0
 }
 
 

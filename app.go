@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc"
 	"log"
 	. "maestro/api"
@@ -45,16 +45,18 @@ func (a *App) registerServices() {
 	ls := newLoginService(a.loginQ, a.cfg)
 	a.services["loginServices"] = ls
 	rs := newRegisterService(a.registerQ, a.cfg)
-	a.services["registerService"] = rs
+	a.services["registerServices"] = rs
 }
 
 func (a *App) start() {
 	PrettyPrint(a.cfg)
 	for serviceName, s := range a.services {
 		switch serviceName {
-		case "loginService":
+		case "loginServices":
+			fmt.Printf("RPC Registring loginService...\n")
 			RegisterLoginServer(a.server, s.(LoginServer))
-		case "registerService":
+		case "registerServices":
+			fmt.Printf("RPC Registring RegisterServer...\n")
 			RegisterRegisterServer(a.server, s.(RegisterServer))
 		}
 	}
@@ -157,15 +159,15 @@ func (a *App) tryLogin(userName string, pass []byte) Status {
 		return Status_BLOCKED
 	}
 
-	trailPassword := hashAndSalt(pass)
-
-	if bytes.Compare(aUser.PassWord, trailPassword) != 0 {
+	if bcrypt.CompareHashAndPassword(aUser.PassWord,pass) != nil  {
 		aUser.loginAttempts += 1
-		if aUser.loginAttempts > a.cfg.MAX_NUMBER_OF_FAILED_LOGIN_ATTEMPT {
+		if aUser.loginAttempts >= a.cfg.MAX_NUMBER_OF_FAILED_LOGIN_ATTEMPT - 1 {
+			fmt.Printf("Blocking user %s\n",userName)
 			aUser.status.Set(BLOCKED)
 			aUser.status.Set(DIRTY)
 			return Status_BLOCKED
 		}
+		fmt.Printf("Login failed, wrong password %s,%s\n",userName,pass)
 		return Status_FAIL
 	}
 	return Status_SUCCESS

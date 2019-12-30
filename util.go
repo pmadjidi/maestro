@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"reflect"
 	"strconv"
+	. "maestro/api"
 )
 
 func hashAndSalt(pwd []byte) []byte {
@@ -29,6 +30,7 @@ func RandomString(n int) string {
 	}
 	return string(b)
 }
+
 
 func PrettyPrint(v interface{}) (err error) {
 	b, err := json.MarshalIndent(v, "", "  ")
@@ -108,5 +110,19 @@ func handleError(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func randomUserForTest(size int) *RegisterReq{
+		if size <= 12 {
+			size = 12
+		}
+	    return &RegisterReq{UserName: RandomString(size),
+		PassWord: []byte(RandomString(size)),
+		FirstName: RandomString(size),
+		LastName: RandomString(size),
+		Email: RandomString(size - 10 ) +  "@gmail.com",
+		Phone: RandomString(size),
+		Address: &RegisterReq_Address{Street:RandomString(size),City: RandomString(size),State: RandomString(size),Zip: RandomString(size)},
+		Device: RandomString(size)}
 }
 

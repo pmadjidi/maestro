@@ -45,11 +45,14 @@ func (l *loginService) Authenticate(ctx context.Context, req *LoginReq) (*LoginR
 	username := req.GetUserName()
 	passWord := req.GetPassWord()
 
+	fmt.Printf("Got Auth request for %s,%s\n",username,passWord)
+
 	if username == "" {
 		l.invalidUsername += 1
 		return &LoginResp{Status: Status_FAIL}, nil
 	}    else if len(passWord) < l.cfg.MINIMUM_PASSWORD_LENGTH || len(passWord) > l.cfg.NAME_LENGTH_LIMIT {
 		   l.invalidPassword += 1
+		   fmt.Printf("Inavild Password\n")
 		return &LoginResp{Status: Status_FAIL}, nil
 	}
 
@@ -75,9 +78,11 @@ func (l *loginService) Authenticate(ctx context.Context, req *LoginReq) (*LoginR
 	case res := <-env.resp:
 		switch res.Status {
 		case   Status_ERROR:
+			fmt.Printf("Password Error\n")
 			l.error += 1
 			return  nil, errors.New(Status_name[int32(Status_ERROR)])
 		case    Status_NOTFOUND:
+			fmt.Printf("Password Not found \n")
 			l.notfound += 1
 			return res,nil
 		default:
