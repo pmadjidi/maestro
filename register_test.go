@@ -43,5 +43,36 @@ func TestRegisterUser(t *testing.T) {
 	log.Printf("Greeting: %s, %s", r.GetStatus(),r.Id)
 }
 
+func TestRegisterMaxNumberOfUsers(t *testing.T) {
+	// Set up a connection to the server.
+	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+	defer conn.Close()
+	c := NewRegisterClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	cfg :=  createLoginServerConfig()
+	for i := 0; i < cfg.MAX_NUMBER_OF_USERS; i++ {
+		req := randomUserForTest(10)
+		r, err := c.Register(ctx, req)
+		if err != nil {
+			t.Errorf("could not create user %+v",err)
+		}
+		log.Printf("Greeting: %s, %s", r.GetStatus(), r.Id)
+	}
+
+	req := randomUserForTest(10)
+	r, err := c.Register(ctx, req)
+	if r.Status != Status_MAXIMUN_NUMBER_OF_USERS_REACHED {
+		t.Errorf("should fail on maximum number of users %+v",err)
+	}
+}
+
+
+
+
 
 
