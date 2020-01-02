@@ -15,6 +15,7 @@ type ServerConfig struct {
 	MINIMUM_PASSWORD_LENGTH int
 	ARRAY_PRE_ALLOCATION_LIMIT int
 	MESSAGE_RETENTION_PERIOD int
+	APP_SECRET string
 }
 
 
@@ -31,10 +32,16 @@ func createLoginServerConfig() *ServerConfig {
 		APP_NAME = "TEST"
 	}
 
+	APP_SECRET := os.Getenv("APP_SECRET")
+	if APP_SECRET == "" {
+		APP_SECRET = "ABRAKADABRA"
+	}
+
+
 
 	MAX_NUMBER_OF_USERS, err := strconv.Atoi(os.Getenv("MAX_NUMBER_OF_USERS"))
 	if err != nil {
-		MAX_NUMBER_OF_USERS = 100
+		MAX_NUMBER_OF_USERS = 10000
 	}
 	MAX_NUMBER_OF_FAILED_LOGIN_ATTEMPT, err := strconv.Atoi(os.Getenv("MAX_NUMBER_OF_FAILED_LOGIN_ATTEMPT"))
 	if err != nil {
@@ -43,7 +50,7 @@ func createLoginServerConfig() *ServerConfig {
 
 	SERVER_QEUEU_LENGTH, err := strconv.Atoi(os.Getenv("SERVER_QEUEU_LENGTH"))
 	if err != nil {
-		SERVER_QEUEU_LENGTH = 0
+		SERVER_QEUEU_LENGTH = 100000
 	}
 
 	NAME_LENGTH_LIMIT , err := strconv.Atoi(os.Getenv("NAME_LENGTH_LIMIT"))
@@ -81,7 +88,7 @@ func createLoginServerConfig() *ServerConfig {
 		MINIMUM_PASSWORD_LENGTH,
 		ARRAY_PRE_ALLOCATION_LIMIT,
 		MESSAGE_RETENTION_PERIOD,
-
+		APP_SECRET,
 	}
 }
 

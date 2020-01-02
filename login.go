@@ -80,7 +80,7 @@ func (l *loginService) Authenticate(ctx context.Context, req *LoginReq) (*LoginR
 		case   Status_ERROR:
 			fmt.Printf("Password Error\n")
 			l.error += 1
-			return  nil, errors.New(Status_name[int32(Status_ERROR)])
+			return &LoginResp{Status: Status_ERROR}, errors.New(Status_name[int32(Status_ERROR)])
 		case    Status_NOTFOUND:
 			fmt.Printf("Password Not found \n")
 			l.notfound += 1

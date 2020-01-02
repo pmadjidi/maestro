@@ -7,6 +7,7 @@ import (
 	context "context"
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
+	timestamp "github.com/golang/protobuf/ptypes/timestamp"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -24,78 +25,86 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-type Req struct {
-	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Text                 []string `protobuf:"bytes,2,rep,name=text,proto3" json:"text,omitempty"`
-	Pic                  [][]byte `protobuf:"bytes,3,rep,name=pic,proto3" json:"pic,omitempty"`
-	ParentId             string   `protobuf:"bytes,4,opt,name=parentId,proto3" json:"parentId,omitempty"`
-	Topic                string   `protobuf:"bytes,5,opt,name=topic,proto3" json:"topic,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+type MsgReq struct {
+	Id                   string               `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Text                 []string             `protobuf:"bytes,2,rep,name=text,proto3" json:"text,omitempty"`
+	Pic                  [][]byte             `protobuf:"bytes,3,rep,name=pic,proto3" json:"pic,omitempty"`
+	ParentId             string               `protobuf:"bytes,4,opt,name=parentId,proto3" json:"parentId,omitempty"`
+	Topic                string               `protobuf:"bytes,5,opt,name=topic,proto3" json:"topic,omitempty"`
+	TimeName             *timestamp.Timestamp `protobuf:"bytes,6,opt,name=time_name,json=timeName,proto3" json:"time_name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
+	XXX_unrecognized     []byte               `json:"-"`
+	XXX_sizecache        int32                `json:"-"`
 }
 
-func (m *Req) Reset()         { *m = Req{} }
-func (m *Req) String() string { return proto.CompactTextString(m) }
-func (*Req) ProtoMessage()    {}
-func (*Req) Descriptor() ([]byte, []int) {
+func (m *MsgReq) Reset()         { *m = MsgReq{} }
+func (m *MsgReq) String() string { return proto.CompactTextString(m) }
+func (*MsgReq) ProtoMessage()    {}
+func (*MsgReq) Descriptor() ([]byte, []int) {
 	return fileDescriptor_33c57e4bae7b9afd, []int{0}
 }
 
-func (m *Req) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Req.Unmarshal(m, b)
+func (m *MsgReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MsgReq.Unmarshal(m, b)
 }
-func (m *Req) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Req.Marshal(b, m, deterministic)
+func (m *MsgReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MsgReq.Marshal(b, m, deterministic)
 }
-func (m *Req) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Req.Merge(m, src)
+func (m *MsgReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgReq.Merge(m, src)
 }
-func (m *Req) XXX_Size() int {
-	return xxx_messageInfo_Req.Size(m)
+func (m *MsgReq) XXX_Size() int {
+	return xxx_messageInfo_MsgReq.Size(m)
 }
-func (m *Req) XXX_DiscardUnknown() {
-	xxx_messageInfo_Req.DiscardUnknown(m)
+func (m *MsgReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgReq.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_Req proto.InternalMessageInfo
+var xxx_messageInfo_MsgReq proto.InternalMessageInfo
 
-func (m *Req) GetId() string {
+func (m *MsgReq) GetId() string {
 	if m != nil {
 		return m.Id
 	}
 	return ""
 }
 
-func (m *Req) GetText() []string {
+func (m *MsgReq) GetText() []string {
 	if m != nil {
 		return m.Text
 	}
 	return nil
 }
 
-func (m *Req) GetPic() [][]byte {
+func (m *MsgReq) GetPic() [][]byte {
 	if m != nil {
 		return m.Pic
 	}
 	return nil
 }
 
-func (m *Req) GetParentId() string {
+func (m *MsgReq) GetParentId() string {
 	if m != nil {
 		return m.ParentId
 	}
 	return ""
 }
 
-func (m *Req) GetTopic() string {
+func (m *MsgReq) GetTopic() string {
 	if m != nil {
 		return m.Topic
 	}
 	return ""
 }
 
-type Resp struct {
+func (m *MsgReq) GetTimeName() *timestamp.Timestamp {
+	if m != nil {
+		return m.TimeName
+	}
+	return nil
+}
+
+type MsgResp struct {
 	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Status               Status   `protobuf:"varint,2,opt,name=status,proto3,enum=api.Status" json:"status,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -103,39 +112,39 @@ type Resp struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Resp) Reset()         { *m = Resp{} }
-func (m *Resp) String() string { return proto.CompactTextString(m) }
-func (*Resp) ProtoMessage()    {}
-func (*Resp) Descriptor() ([]byte, []int) {
+func (m *MsgResp) Reset()         { *m = MsgResp{} }
+func (m *MsgResp) String() string { return proto.CompactTextString(m) }
+func (*MsgResp) ProtoMessage()    {}
+func (*MsgResp) Descriptor() ([]byte, []int) {
 	return fileDescriptor_33c57e4bae7b9afd, []int{1}
 }
 
-func (m *Resp) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Resp.Unmarshal(m, b)
+func (m *MsgResp) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MsgResp.Unmarshal(m, b)
 }
-func (m *Resp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Resp.Marshal(b, m, deterministic)
+func (m *MsgResp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MsgResp.Marshal(b, m, deterministic)
 }
-func (m *Resp) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Resp.Merge(m, src)
+func (m *MsgResp) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgResp.Merge(m, src)
 }
-func (m *Resp) XXX_Size() int {
-	return xxx_messageInfo_Resp.Size(m)
+func (m *MsgResp) XXX_Size() int {
+	return xxx_messageInfo_MsgResp.Size(m)
 }
-func (m *Resp) XXX_DiscardUnknown() {
-	xxx_messageInfo_Resp.DiscardUnknown(m)
+func (m *MsgResp) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgResp.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_Resp proto.InternalMessageInfo
+var xxx_messageInfo_MsgResp proto.InternalMessageInfo
 
-func (m *Resp) GetId() string {
+func (m *MsgResp) GetId() string {
 	if m != nil {
 		return m.Id
 	}
 	return ""
 }
 
-func (m *Resp) GetStatus() Status {
+func (m *MsgResp) GetStatus() Status {
 	if m != nil {
 		return m.Status
 	}
@@ -143,27 +152,31 @@ func (m *Resp) GetStatus() Status {
 }
 
 func init() {
-	proto.RegisterType((*Req)(nil), "api.Req")
-	proto.RegisterType((*Resp)(nil), "api.Resp")
+	proto.RegisterType((*MsgReq)(nil), "api.MsgReq")
+	proto.RegisterType((*MsgResp)(nil), "api.MsgResp")
 }
 
 func init() { proto.RegisterFile("message.proto", fileDescriptor_33c57e4bae7b9afd) }
 
 var fileDescriptor_33c57e4bae7b9afd = []byte{
-	// 208 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x64, 0x8f, 0xbf, 0x4b, 0xc5, 0x30,
-	0x10, 0xc7, 0x49, 0xd2, 0x3e, 0x5f, 0xcf, 0xe7, 0x43, 0x0e, 0x87, 0xd0, 0x29, 0xd4, 0x25, 0x20,
-	0x14, 0xa9, 0xa3, 0xa3, 0x93, 0x83, 0x4b, 0xfc, 0x0b, 0xa2, 0x3d, 0x34, 0x43, 0x4d, 0xda, 0x9c,
-	0xe0, 0x9f, 0x2f, 0x4d, 0x8b, 0x8b, 0xdb, 0xe7, 0xfb, 0xe3, 0xb8, 0x3b, 0xb8, 0x9a, 0x28, 0x67,
-	0xff, 0x41, 0x7d, 0x5a, 0x22, 0x47, 0x54, 0x3e, 0x85, 0xf6, 0x94, 0xd9, 0xf3, 0x77, 0xde, 0xac,
-	0x6e, 0x02, 0xe5, 0x68, 0xc6, 0x33, 0xc8, 0x30, 0x6a, 0x61, 0x84, 0x6d, 0x9c, 0x0c, 0x23, 0x22,
-	0x54, 0x4c, 0x3f, 0xac, 0xa5, 0x51, 0xb6, 0x71, 0x85, 0xf1, 0x1a, 0x54, 0x0a, 0xef, 0x5a, 0x19,
-	0x65, 0x4f, 0x6e, 0x45, 0x6c, 0xe1, 0x98, 0xfc, 0x42, 0x5f, 0xfc, 0x3c, 0xea, 0xaa, 0xcc, 0xfe,
-	0x69, 0xbc, 0x81, 0x9a, 0xe3, 0xda, 0xaf, 0x4b, 0xb0, 0x89, 0xee, 0x11, 0x2a, 0x47, 0x39, 0xfd,
-	0xdb, 0x77, 0x0b, 0x87, 0xed, 0x2c, 0x2d, 0x8d, 0xb0, 0xe7, 0xe1, 0xb2, 0xf7, 0x29, 0xf4, 0xaf,
-	0xc5, 0x72, 0x7b, 0x34, 0xdc, 0xc1, 0xc5, 0x8b, 0xa7, 0xcc, 0x4b, 0x44, 0x03, 0xf5, 0xd3, 0xa7,
-	0x67, 0xc6, 0x63, 0x29, 0x3a, 0x9a, 0xdb, 0x66, 0xa7, 0x9c, 0xac, 0xb8, 0x17, 0x6f, 0x87, 0xf2,
-	0xdf, 0xc3, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xa3, 0x25, 0xab, 0x16, 0x03, 0x01, 0x00, 0x00,
+	// 267 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x64, 0x90, 0x31, 0x4f, 0xf3, 0x30,
+	0x10, 0x86, 0xe5, 0xa4, 0x49, 0x9b, 0x6b, 0xbe, 0xea, 0x93, 0xc5, 0x60, 0x65, 0x21, 0x2a, 0x12,
+	0xf2, 0xe4, 0x42, 0x18, 0xd8, 0x58, 0x98, 0x18, 0xca, 0x60, 0xd8, 0x91, 0x4b, 0x4c, 0xb0, 0x84,
+	0x6b, 0x13, 0x5f, 0x25, 0xfe, 0x12, 0xff, 0x12, 0xc5, 0xa6, 0x30, 0xb0, 0xdd, 0x7b, 0xef, 0x63,
+	0xe9, 0xf1, 0xc1, 0x3f, 0xab, 0x43, 0x50, 0x83, 0x16, 0x7e, 0x74, 0xe8, 0x68, 0xae, 0xbc, 0x69,
+	0xea, 0x80, 0x0a, 0x0f, 0x21, 0xad, 0x9a, 0xd3, 0xc1, 0xb9, 0xe1, 0x4d, 0x6f, 0x62, 0xda, 0x1d,
+	0x5e, 0x36, 0x68, 0xac, 0x0e, 0xa8, 0xac, 0x4f, 0xc0, 0xfa, 0x93, 0x40, 0xb9, 0x0d, 0x83, 0xd4,
+	0xef, 0x74, 0x05, 0x99, 0xe9, 0x19, 0x69, 0x09, 0xaf, 0x64, 0x66, 0x7a, 0x4a, 0x61, 0x86, 0xfa,
+	0x03, 0x59, 0xd6, 0xe6, 0xbc, 0x92, 0x71, 0xa6, 0xff, 0x21, 0xf7, 0xe6, 0x99, 0xe5, 0x6d, 0xce,
+	0x6b, 0x39, 0x8d, 0xb4, 0x81, 0x85, 0x57, 0xa3, 0xde, 0xe3, 0x5d, 0xcf, 0x66, 0xf1, 0xed, 0x4f,
+	0xa6, 0x27, 0x50, 0xa0, 0x9b, 0xf8, 0x22, 0x16, 0x29, 0xd0, 0x6b, 0xa8, 0x26, 0x8b, 0xa7, 0xbd,
+	0xb2, 0x9a, 0x95, 0x2d, 0xe1, 0xcb, 0xae, 0x11, 0xc9, 0x53, 0x1c, 0x3d, 0xc5, 0xe3, 0xd1, 0x53,
+	0x2e, 0x26, 0xf8, 0x5e, 0x59, 0xbd, 0xbe, 0x81, 0x79, 0x54, 0x0d, 0xfe, 0x8f, 0xeb, 0x19, 0x94,
+	0xe9, 0xdf, 0x2c, 0x6b, 0x09, 0x5f, 0x75, 0x4b, 0xa1, 0xbc, 0x11, 0x0f, 0x71, 0x25, 0xbf, 0xab,
+	0xee, 0x12, 0xe6, 0x5b, 0xa5, 0x03, 0x8e, 0x8e, 0x9e, 0x43, 0x71, 0xfb, 0xaa, 0x10, 0x69, 0x02,
+	0xd3, 0x05, 0x9a, 0xfa, 0x37, 0x04, 0xcf, 0xc9, 0x05, 0xd9, 0x95, 0x51, 0xe8, 0xea, 0x2b, 0x00,
+	0x00, 0xff, 0xff, 0x9b, 0xbe, 0xbe, 0xbd, 0x6a, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -199,8 +212,8 @@ func (c *maestroClient) Chatt(ctx context.Context, opts ...grpc.CallOption) (Mae
 }
 
 type Maestro_ChattClient interface {
-	Send(*Req) error
-	Recv() (*Resp, error)
+	Send(*MsgReq) error
+	Recv() (*MsgResp, error)
 	grpc.ClientStream
 }
 
@@ -208,12 +221,12 @@ type maestroChattClient struct {
 	grpc.ClientStream
 }
 
-func (x *maestroChattClient) Send(m *Req) error {
+func (x *maestroChattClient) Send(m *MsgReq) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *maestroChattClient) Recv() (*Resp, error) {
-	m := new(Resp)
+func (x *maestroChattClient) Recv() (*MsgResp, error) {
+	m := new(MsgResp)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -242,8 +255,8 @@ func _Maestro_Chatt_Handler(srv interface{}, stream grpc.ServerStream) error {
 }
 
 type Maestro_ChattServer interface {
-	Send(*Resp) error
-	Recv() (*Req, error)
+	Send(*MsgResp) error
+	Recv() (*MsgReq, error)
 	grpc.ServerStream
 }
 
@@ -251,12 +264,12 @@ type maestroChattServer struct {
 	grpc.ServerStream
 }
 
-func (x *maestroChattServer) Send(m *Resp) error {
+func (x *maestroChattServer) Send(m *MsgResp) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *maestroChattServer) Recv() (*Req, error) {
-	m := new(Req)
+func (x *maestroChattServer) Recv() (*MsgReq, error) {
+	m := new(MsgReq)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
