@@ -57,7 +57,14 @@ func newDatabase(cfg *ServerConfig) * sql.DB{
 	err := os.MkdirAll("./db/", os.ModePerm)
 	handleError(err)
 
-	db, _ := sql.Open("sqlite3", "./db/" + cfg.APP_NAME + ".db")
+	dbName := "./db/" + cfg.APP_NAME + ".db"
+
+	if cfg.RESETDATABASE_ON_START {
+		fmt.Printf("RESETDATABASE_ON_START is set to true, removing old database...\n")
+		os.Remove(dbName)
+	}
+
+	db, _ := sql.Open("sqlite3", dbName)
 	_, err = db.Exec(createUserDb)
 	handleError(err)
 	_,err = db.Exec(createAddressDb)

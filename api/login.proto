@@ -13,8 +13,7 @@ message LoginReq{
 
 message LoginResp{
     string id  = 1;
-    string key = 2;
-    Status status = 3;
+    Status status = 2;
 }
 
 

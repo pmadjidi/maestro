@@ -24,7 +24,6 @@ message RegisterReq{
 message RegisterResp{
     string id = 1;
     Status status = 2;
-    string key = 3;
 }
 
 

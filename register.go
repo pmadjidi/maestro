@@ -4,19 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"google.golang.org/grpc/metadata"
 	. "maestro/api"
 )
 
 type registerEnvelope struct {
 	req  chan *RegisterReq
 	resp chan *RegisterResp
+	token chan *string
 }
 
 
 func newRegisterEnvelope() *registerEnvelope {
-	return &registerEnvelope{make(chan *RegisterReq, 1), make(chan *RegisterResp, 1)}
+	return &registerEnvelope{make(chan *RegisterReq, 1), make(chan *RegisterResp, 1),make(chan *string,1)}
 }
-
 
 
 type registerService struct {
@@ -114,8 +115,13 @@ func (r *registerService) Register(ctx context.Context, req *RegisterReq) (*Regi
 		case    Status_EXITSTS:
 			r.collision += 1
 			return res,nil
-		default:
+		case Status_SUCCESS:
 			r.success += 1
+			token := *(<- env.token)
+			fmt.Printf("Got token %s\n",token)
+			ctx = metadata.AppendToOutgoingContext(ctx, "app", r.cfg.APP_NAME, "bearer",token)
+			return res,nil
+		default:
 			return res,nil
 		}
 	}

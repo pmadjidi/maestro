@@ -180,7 +180,6 @@ class RegisterResp extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo('RegisterResp', package: const $pb.PackageName('api'), createEmptyInstance: create)
     ..aOS(1, 'id')
     ..e<$0.Status>(2, 'status', $pb.PbFieldType.OE, defaultOrMaker: $0.Status.SUCCESS, valueOf: $0.Status.valueOf, enumValues: $0.Status.values)
-    ..aOS(3, 'key')
     ..hasRequiredFields = false
   ;
 
@@ -216,15 +215,6 @@ class RegisterResp extends $pb.GeneratedMessage {
   $core.bool hasStatus() => $_has(1);
   @$pb.TagNumber(2)
   void clearStatus() => clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.String get key => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set key($core.String v) { $_setString(2, v); }
-  @$pb.TagNumber(3)
-  $core.bool hasKey() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearKey() => clearField(3);
 }
 
 class RegisterApi {

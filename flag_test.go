@@ -25,7 +25,7 @@ func TestFlagClearDirty(t *testing.T) {
 func TestFlagDirtyAndBlocked(t *testing.T) {
 	u := newUser(&RegisterReq{})
 	u.status.Set(BLOCKED)
-	fmt.Printf("test blocked  %t \n",u.status.Is(BLOCKED))
+	fmt.Printf("flag set to blocked  %t \n",u.status.Is(BLOCKED))
 
 	if !u.status.Is(BLOCKED) {
 		t.Errorf("Flag should be blocked and dirty %d",u.status.Get())

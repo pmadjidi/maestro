@@ -4,16 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	. "maestro/api"
 )
 
 type loginEnvelope struct {
 	req  chan *LoginReq
 	resp chan *LoginResp
+	token chan *string
 }
 
+
 func newLoginEnvelope() *loginEnvelope {
-	return &loginEnvelope{make(chan *LoginReq, 1), make(chan *LoginResp, 1)}
+	return &loginEnvelope{make(chan *LoginReq, 1), make(chan *LoginResp, 1),make(chan *string,1)}
 }
 
 
@@ -85,10 +89,18 @@ func (l *loginService) Authenticate(ctx context.Context, req *LoginReq) (*LoginR
 			fmt.Printf("Password Not found \n")
 			l.notfound += 1
 			return res,nil
-		default:
+		case Status_SUCCESS:
 			l.success += 1
+			token := *<- env.token
+			fmt.Printf("token is set to: %s\n",token)
+			grpc.SendHeader(ctx, metadata.New(map[string]string{"bearer-bin": token ,"app": l.cfg.APP_NAME}))
+			//ctx = metadata.(ctx, "app", l.cfg.APP_NAME, "bearer",env.token)
+			return res,nil
+		default:
 			return res,nil
 		}
+
+
 	}
 }
 

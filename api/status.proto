@@ -21,4 +21,5 @@ enum Status {
     VALIDATED = 16;
     EXITSTS = 17;
     MAXIMUN_NUMBER_OF_USERS_REACHED = 18;
+    NOAUTH = 19;
 }

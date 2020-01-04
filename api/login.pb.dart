@@ -76,8 +76,7 @@ class LoginReq extends $pb.GeneratedMessage {
 class LoginResp extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo('LoginResp', package: const $pb.PackageName('api'), createEmptyInstance: create)
     ..aOS(1, 'id')
-    ..aOS(2, 'key')
-    ..e<$0.Status>(3, 'status', $pb.PbFieldType.OE, defaultOrMaker: $0.Status.SUCCESS, valueOf: $0.Status.valueOf, enumValues: $0.Status.values)
+    ..e<$0.Status>(2, 'status', $pb.PbFieldType.OE, defaultOrMaker: $0.Status.SUCCESS, valueOf: $0.Status.valueOf, enumValues: $0.Status.values)
     ..hasRequiredFields = false
   ;
 
@@ -106,22 +105,13 @@ class LoginResp extends $pb.GeneratedMessage {
   void clearId() => clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get key => $_getSZ(1);
+  $0.Status get status => $_getN(1);
   @$pb.TagNumber(2)
-  set key($core.String v) { $_setString(1, v); }
+  set status($0.Status v) { setField(2, v); }
   @$pb.TagNumber(2)
-  $core.bool hasKey() => $_has(1);
+  $core.bool hasStatus() => $_has(1);
   @$pb.TagNumber(2)
-  void clearKey() => clearField(2);
-
-  @$pb.TagNumber(3)
-  $0.Status get status => $_getN(2);
-  @$pb.TagNumber(3)
-  set status($0.Status v) { setField(3, v); }
-  @$pb.TagNumber(3)
-  $core.bool hasStatus() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearStatus() => clearField(3);
+  void clearStatus() => clearField(2);
 }
 
 class LoginApi {

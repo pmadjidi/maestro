@@ -16,6 +16,7 @@ type ServerConfig struct {
 	ARRAY_PRE_ALLOCATION_LIMIT int
 	MESSAGE_RETENTION_PERIOD int
 	APP_SECRET string
+	RESETDATABASE_ON_START bool
 }
 
 
@@ -73,8 +74,10 @@ func createLoginServerConfig() *ServerConfig {
 		MESSAGE_RETENTION_PERIOD	 =   60 * 60 * 24 * 30 // 30 days
 	}
 
-
-
+	RESETDATABASE_ON_START , err := strconv.ParseBool(os.Getenv("RESETDATABASE_ON_START"))
+	if err  != nil  {
+		RESETDATABASE_ON_START = true
+	}
 
 
 
@@ -89,6 +92,7 @@ func createLoginServerConfig() *ServerConfig {
 		ARRAY_PRE_ALLOCATION_LIMIT,
 		MESSAGE_RETENTION_PERIOD,
 		APP_SECRET,
+		RESETDATABASE_ON_START,
 	}
 }
 

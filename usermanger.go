@@ -9,17 +9,19 @@ import (
 	. "maestro/api"
 )
 
-func (a *App) issueToken(durationInSeconds int) (string,error) {
+func (a *App) issueToken(durationInSeconds int,userName,device string) (string,error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"APP": a.cfg.APP_NAME,
-		"ISSUED": time.Now().Second(),
+		"Issuer": a.cfg.APP_NAME,
+		"Username": userName,
+		"device": device,
 		"VALID": time.Now().Second() +  durationInSeconds, // vaid for a week
 	})
 	tokenString, err := token.SignedString([]byte(a.cfg.APP_SECRET))
 	if err != nil {
-		return tokenString, err
+		fmt.Printf("Error: %v", err)
+		return "", err
 	} else {
-		return "",err
+		return tokenString,nil
 	}
 }
 
@@ -31,16 +33,17 @@ func (a *App) userManager() {
 			req := <-env.req
 			status :=  a.tryLogin(req.GetUserName(),req.GetPassWord())
 			if status == Status_SUCCESS {
-				token,err := a.issueToken(7 * 24 * 60 * 60)
+				token,err := a.issueToken(7 * 24 * 60 * 60,req.GetUserName(),req.GetDevice())
 				if err != nil {
 					env.resp <- &LoginResp{Status: Status_ERROR}
 				} else {
-					env.resp <- &LoginResp{Status: Status_SUCCESS, Key: token}
+					env.token <- &token
+					env.resp <- &LoginResp{Status: Status_SUCCESS}
 				}
 			} else {
 				env.resp <- &LoginResp{Status: status}
 			}
-		case <-time.After(3 * time.Second):
+		case <-time.After(20 * time.Second):
 			fmt.Printf("loginServer: Looking for changes in user database...\n")
 			for _, aUser := range a.users.db {
 				aUser.Lock()
@@ -55,7 +58,7 @@ func (a *App) userManager() {
 				fmt.Printf("LoginServer, dirty users found [%d]...\n", len(a.users.dirty))
 				select {
 				case a.UserDbQ <- a.users.dirty:
-					a.users.dirty = make([]*User, 5)
+					a.users.dirty = make([]*User, 0)
 					a.users.dirtyCounter = 0
 				case <-time.After(2 * time.Second):
 					fmt.Printf("loginServer: database server blocked ...\n")
@@ -75,11 +78,13 @@ func (a *App) userManager() {
 				} else {
 					newUser := newUser(req)
 					a.users.db[newUser.UserName] = newUser
-					token,err := a.issueToken(7 * 24 * 60 * 60)
+					token,err := a.issueToken(7 * 24 * 60 * 60,req.GetUserName(),req.GetDevice())
 					if err != nil {
-						env.resp <- &RegisterResp{Id: newUser.uid, Status: Status_SUCCESS,Key: token}
+						fmt.Printf("Error %+v",err)
+						env.resp <-  &RegisterResp{Id: newUser.uid, Status: Status_NOAUTH}
 					} else {
-						env.resp <-  &RegisterResp{Id: newUser.uid, Status: Status_SUCCESS,Key: ""}
+						env.token <- &token
+						env.resp <- &RegisterResp{Id: newUser.uid, Status: Status_SUCCESS}
 					}
 				}
 			}

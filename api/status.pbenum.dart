@@ -29,6 +29,7 @@ class Status extends $pb.ProtobufEnum {
   static const Status VALIDATED = Status._(16, 'VALIDATED');
   static const Status EXITSTS = Status._(17, 'EXITSTS');
   static const Status MAXIMUN_NUMBER_OF_USERS_REACHED = Status._(18, 'MAXIMUN_NUMBER_OF_USERS_REACHED');
+  static const Status NOAUTH = Status._(19, 'NOAUTH');
 
   static const $core.List<Status> values = <Status> [
     SUCCESS,
@@ -50,6 +51,7 @@ class Status extends $pb.ProtobufEnum {
     VALIDATED,
     EXITSTS,
     MAXIMUN_NUMBER_OF_USERS_REACHED,
+    NOAUTH,
   ];
 
   static final $core.Map<$core.int, Status> _byValue = $pb.ProtobufEnum.initByValue(values);

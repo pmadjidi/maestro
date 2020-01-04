@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"log"
 	"testing"
 	"time"
@@ -30,8 +31,14 @@ func TestLoginFail(t *testing.T) {
 	}
 	ctx, cancel1 := context.WithTimeout(context.Background(), time.Second)
 	defer cancel1()
-	loginReq := LoginReq{Id: "",UserName: "usertofail",PassWord: []byte("passwordtofail"),Device:"devicetofail"}
-	lresp,err := c.Authenticate(ctx,&loginReq)
+	loginReq := &LoginReq{Id: "",UserName: "usertofail",PassWord: []byte("passwordtofail"),Device:"devicetofail"}
+	var header, trailer metadata.MD
+	lresp, err := c.Authenticate(
+		context.Background(),
+		loginReq,
+		grpc.Header(&header),
+		grpc.Trailer(&trailer),
+	)
 	if err != nil {
 		t.Errorf("could not authenticate %+v",err)
 	}
@@ -54,18 +61,39 @@ func TestLoginSuccess(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	req := randomUserForTest(10)
-	ans , err := r.Register(ctx,req)
+	response , err := r.Register(ctx,req)
 	if err != nil {
 		t.Errorf("could not register user: %v", req)
 	} else {
-		log.Printf("Registered user %+v\n",ans.Key)
+		log.Printf("Registered user %+v\n",response.Id)
+		md,ok:= metadata.FromIncomingContext(ctx)
+		if ok {
+			fmt.Printf("Token := %s", md.Get("bearer"))
+		} else {
+			fmt.Printf("Token is missing  %+v", md)
+		}
 	}
 	ctx, cancel1 := context.WithTimeout(context.Background(), time.Second)
 	defer cancel1()
 	loginReq := &LoginReq{Id: "",UserName: req.UserName,PassWord: req.PassWord,Device: req.Device}
-	lresp,err := c.Authenticate(ctx,loginReq)
+	//lresp,err := c.Authenticate(ctx,loginReq)
+	var header, trailer metadata.MD
+	lresp, err := c.Authenticate(
+		context.Background(),
+		loginReq,
+		grpc.Header(&header),
+		grpc.Trailer(&trailer),
+	)
 	if err != nil {
 		t.Errorf("could not authenticate %+v",err)
+	} else {
+		for key, value := range header {
+			fmt.Printf("header: %s => %s\n", key, value)
+		}
+
+		for key, value := range trailer {
+			fmt.Printf("trailer: %s => %s\n", key, value)
+		}
 	}
 
 	fmt.Printf("resp is %+v\n",lresp)

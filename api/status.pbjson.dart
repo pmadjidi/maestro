@@ -27,6 +27,7 @@ const Status$json = const {
     const {'1': 'VALIDATED', '2': 16},
     const {'1': 'EXITSTS', '2': 17},
     const {'1': 'MAXIMUN_NUMBER_OF_USERS_REACHED', '2': 18},
+    const {'1': 'NOAUTH', '2': 19},
   ],
 };
 
