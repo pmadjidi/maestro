@@ -29,22 +29,22 @@ func TestLoginFail(t *testing.T) {
 	} else {
 		log.Printf("Greeting: %s, %s", resp.GetStatus(),resp.Id)
 	}
-	ctx, cancel1 := context.WithTimeout(context.Background(), time.Second)
+
+	ctx1, cancel1 := context.WithTimeout(context.Background(), time.Second)
 	defer cancel1()
-	loginReq := &LoginReq{Id: "",UserName: "usertofail",PassWord: []byte("passwordtofail"),Device:"devicetofail"}
-	var header, trailer metadata.MD
+	loginReq := &LoginReq{Device:"devicetofail"}
+	ctx1 = metadata.AppendToOutgoingContext(ctx1, "username", "usernametofail", "password", "passwordtofail")
 	lresp, err := c.Authenticate(
-		context.Background(),
+		ctx1,
 		loginReq,
-		grpc.Header(&header),
-		grpc.Trailer(&trailer),
 	)
 	if err != nil {
 		t.Errorf("could not authenticate %+v",err)
+		t.Fail()
 	}
 
-	if lresp.Status != Status_FAIL {
-		t.Errorf("test should fail %s",lresp.Status)
+	if lresp != nil && lresp.Status != Status_FAIL {
+		t.Errorf("should have Status_Fail %s",lresp.Status)
 	}
 }
 
@@ -66,41 +66,26 @@ func TestLoginSuccess(t *testing.T) {
 		t.Errorf("could not register user: %v", req)
 	} else {
 		log.Printf("Registered user %+v\n",response.Id)
-		md,ok:= metadata.FromIncomingContext(ctx)
-		if ok {
-			fmt.Printf("Token := %s", md.Get("bearer"))
-		} else {
-			fmt.Printf("Token is missing  %+v", md)
-		}
 	}
-	ctx, cancel1 := context.WithTimeout(context.Background(), time.Second)
+	ctx1, cancel1 := context.WithTimeout(context.Background(), time.Second)
 	defer cancel1()
-	loginReq := &LoginReq{Id: "",UserName: req.UserName,PassWord: req.PassWord,Device: req.Device}
-	//lresp,err := c.Authenticate(ctx,loginReq)
-	var header, trailer metadata.MD
+	loginReq := &LoginReq{Device:"devicetofail"}
+	ctx1 = metadata.AppendToOutgoingContext(ctx1, "username",req.UserName, "password", string(req.PassWord))
 	lresp, err := c.Authenticate(
-		context.Background(),
+		ctx1,
 		loginReq,
-		grpc.Header(&header),
-		grpc.Trailer(&trailer),
 	)
 	if err != nil {
 		t.Errorf("could not authenticate %+v",err)
 	} else {
-		for key, value := range header {
-			fmt.Printf("header: %s => %s\n", key, value)
+		md, val := metadata.FromIncomingContext(ctx1)
+		if val {
+			token := md.Get("bearer-bin")
+			fmt.Printf("Token := %s", token)
+			if len(token) == 0 || lresp.Status != Status_SUCCESS {
+				t.Fail()
+			}
 		}
-
-		for key, value := range trailer {
-			fmt.Printf("trailer: %s => %s\n", key, value)
-		}
-	}
-
-	fmt.Printf("resp is %+v\n",lresp)
-
-	if lresp.Status != Status_SUCCESS {
-		fmt.Printf("failed for user %+v\n",req)
-		t.Errorf("test should succeed %+v",lresp)
 	}
 }
 
@@ -123,26 +108,35 @@ func TestLoginBlock(t *testing.T) {
 	} else {
 		log.Printf("Registered user %+v\n",req)
 	}
-	ctx, cancel1 := context.WithTimeout(context.Background(), time.Second)
+	ctx1, cancel1 := context.WithTimeout(context.Background(), time.Second)
 	defer cancel1()
-	loginReqCorrectPassword := &LoginReq{Id: "",UserName: req.UserName,PassWord: req.PassWord,Device: req.Device}
-	loginReqWrongPassword := &LoginReq{Id: "",UserName: req.UserName,PassWord: []byte("wrongPassword"),Device: req.Device}
-	lresp,err := c.Authenticate(ctx,loginReqWrongPassword)
+	loginReq := &LoginReq{Device: req.Device}
+	ctx1 = metadata.AppendToOutgoingContext(ctx1, "username",req.UserName, "password", "wrongPassword")
+	lresp, err := c.Authenticate(
+		ctx1,
+		loginReq,
+	)
+	lresp,err = c.Authenticate(ctx1,loginReq)
 	if err != nil {
 		fmt.Printf("status is: %s",lresp.Status)
 		t.Errorf("could not authenticate %+v",err)
 	}
-	lresp,err = c.Authenticate(ctx,loginReqWrongPassword)
+	lresp,err = c.Authenticate(ctx1,loginReq)
 	if err != nil {
 		fmt.Printf("status is: %s",lresp.Status)
 		t.Errorf("could not authenticate %+v",err)
 	}
-	lresp,err = c.Authenticate(ctx,loginReqWrongPassword)
+	lresp,err = c.Authenticate(ctx1,loginReq)
 	if err != nil {
 		fmt.Printf("status is: %s",lresp.Status)
 		t.Errorf("could not authenticate %+v",err)
 	}
-	lresp,err = c.Authenticate(ctx,loginReqCorrectPassword)
+
+	ctx2, cancel2 := context.WithTimeout(context.Background(), time.Second)
+	defer cancel2()
+	ctx2 = metadata.AppendToOutgoingContext(ctx2, "username",req.UserName, "password", string(req.PassWord))
+
+	lresp,err = c.Authenticate(ctx2,loginReq)
 	if err != nil {
 		fmt.Printf("status is: %s",lresp.Status)
 		t.Errorf("could not authenticate %+v",err)

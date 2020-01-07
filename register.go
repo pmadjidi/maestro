@@ -24,10 +24,7 @@ type registerService struct {
 	name string
 	Q chan *registerEnvelope
 	cfg *ServerConfig
-	timeout int64
-	error int64
-	collision int64
-	success int64
+	stats *metrics
 }
 
 func (l *registerService) Name() string {
@@ -35,7 +32,7 @@ func (l *registerService) Name() string {
 }
 
 func newRegisterService(Q chan *registerEnvelope,cfg *ServerConfig) *registerService {
-	return &registerService{"registerService",Q,cfg,0,0,0,0}
+	return &registerService{"registerService",Q,cfg,newMetrics()}
 }
 
 
@@ -96,7 +93,7 @@ func (r *registerService) Register(ctx context.Context, req *RegisterReq) (*Regi
 	case <-ctx.Done():
 		err := ctx.Err()
 		fmt.Printf("Register, in error to kernel: %+v\n", err)
-		r.timeout += 1
+		r.stats.timeouts += 1
 		return &RegisterResp{Status: Status_TIMEOUT}, nil
 
 	}
@@ -105,21 +102,21 @@ func (r *registerService) Register(ctx context.Context, req *RegisterReq) (*Regi
 	case <-ctx.Done():
 		err := ctx.Err()
 		fmt.Printf("Register, in error from kernel: %+v\n", err)
-		r.timeout += 1
+		r.stats.timeouts += 1
 		return &RegisterResp{Status: Status_TIMEOUT}, nil
 	case res := <-env.resp:
 		switch res.Status {
 		case   Status_ERROR:
-			r.error += 1
+			r.stats.errors += 1
 			return  nil, errors.New(Status_name[int32(Status_ERROR)])
-		case    Status_EXITSTS:
-			r.collision += 1
+		case  Status_EXITSTS:
+			r.stats.success += 1
 			return res,nil
 		case Status_SUCCESS:
-			r.success += 1
+			r.stats.success += 1
 			token := *(<- env.token)
 			fmt.Printf("Got token %s\n",token)
-			ctx = metadata.AppendToOutgoingContext(ctx, "app", r.cfg.APP_NAME, "bearer",token)
+			ctx = metadata.AppendToOutgoingContext(ctx, "app", r.cfg.APP_NAME, "bearer-bin",token)
 			return res,nil
 		default:
 			return res,nil

@@ -30,10 +30,9 @@ func (a *App) userManager() {
 	for {
 		select {
 		case env := <-a.loginQ:
-			req := <-env.req
-			status :=  a.tryLogin(req.GetUserName(),req.GetPassWord())
+			status :=  a.tryLogin(*env.username,[]byte(*env.password))
 			if status == Status_SUCCESS {
-				token,err := a.issueToken(7 * 24 * 60 * 60,req.GetUserName(),req.GetDevice())
+				token,err := a.issueToken(7 * 24 * 60 * 60,*env.username,*env.device)
 				if err != nil {
 					env.resp <- &LoginResp{Status: Status_ERROR}
 				} else {

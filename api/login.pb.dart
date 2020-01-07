@@ -14,10 +14,7 @@ import 'status.pbenum.dart' as $0;
 
 class LoginReq extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo('LoginReq', package: const $pb.PackageName('api'), createEmptyInstance: create)
-    ..aOS(1, 'id')
-    ..aOS(2, 'userName', protoName: 'userName')
-    ..a<$core.List<$core.int>>(3, 'passWord', $pb.PbFieldType.OY, protoName: 'passWord')
-    ..aOS(4, 'device')
+    ..aOS(1, 'device')
     ..hasRequiredFields = false
   ;
 
@@ -37,40 +34,13 @@ class LoginReq extends $pb.GeneratedMessage {
   static LoginReq _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
+  $core.String get device => $_getSZ(0);
   @$pb.TagNumber(1)
-  set id($core.String v) { $_setString(0, v); }
+  set device($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
+  $core.bool hasDevice() => $_has(0);
   @$pb.TagNumber(1)
-  void clearId() => clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get userName => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set userName($core.String v) { $_setString(1, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasUserName() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearUserName() => clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.List<$core.int> get passWord => $_getN(2);
-  @$pb.TagNumber(3)
-  set passWord($core.List<$core.int> v) { $_setBytes(2, v); }
-  @$pb.TagNumber(3)
-  $core.bool hasPassWord() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearPassWord() => clearField(3);
-
-  @$pb.TagNumber(4)
-  $core.String get device => $_getSZ(3);
-  @$pb.TagNumber(4)
-  set device($core.String v) { $_setString(3, v); }
-  @$pb.TagNumber(4)
-  $core.bool hasDevice() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearDevice() => clearField(4);
+  void clearDevice() => clearField(1);
 }
 
 class LoginResp extends $pb.GeneratedMessage {

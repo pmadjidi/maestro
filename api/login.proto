@@ -4,10 +4,7 @@ package api;
 import "status.proto";
 
 message LoginReq{
-    string id = 1;
-    string userName = 2;
-    bytes passWord = 3;
-    string device = 4;
+    string device = 1;
 }
 
 

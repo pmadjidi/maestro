@@ -13,6 +13,13 @@ import (
 	. "maestro/api"
 )
 
+
+func Info(format string, a ...interface{}) {
+	fmt.Printf("Info:\t"+format+"\n", a...)
+}
+
+
+
 func hashAndSalt(pwd []byte) []byte {
 	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
 	if err != nil {

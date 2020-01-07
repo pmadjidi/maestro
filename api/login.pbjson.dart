@@ -8,10 +8,7 @@
 const LoginReq$json = const {
   '1': 'LoginReq',
   '2': const [
-    const {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
-    const {'1': 'userName', '3': 2, '4': 1, '5': 9, '10': 'userName'},
-    const {'1': 'passWord', '3': 3, '4': 1, '5': 12, '10': 'passWord'},
-    const {'1': 'device', '3': 4, '4': 1, '5': 9, '10': 'device'},
+    const {'1': 'device', '3': 1, '4': 1, '5': 9, '10': 'device'},
   ],
 };
 
