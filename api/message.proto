@@ -6,8 +6,8 @@ import "google/protobuf/timestamp.proto";
 
 message MsgReq{
     string id = 1;
-    repeated string text = 2;
-    repeated bytes pic = 3;
+    string text = 2;
+    bytes pic = 3;
     string parentId = 4;
     string topic = 5;
     google.protobuf.Timestamp time_name = 6;
@@ -20,6 +20,6 @@ message MsgResp{
 }
 
 
-service Maestro {
-    rpc Chatt(stream MsgReq) returns (stream MsgResp);
+service Message {
+    rpc Msg(stream MsgReq) returns (stream MsgResp);
 }

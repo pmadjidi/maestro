@@ -10,6 +10,8 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import 'google/protobuf/timestamp.pb.dart' as $3;
+
 import 'status.pbenum.dart' as $0;
 
 class RegisterReq_Address extends $pb.GeneratedMessage {
@@ -83,6 +85,7 @@ class RegisterReq extends $pb.GeneratedMessage {
     ..aOS(6, 'phone')
     ..aOM<RegisterReq_Address>(7, 'address', subBuilder: RegisterReq_Address.create)
     ..aOS(8, 'device')
+    ..aOM<$3.Timestamp>(9, 'timeName', subBuilder: $3.Timestamp.create)
     ..hasRequiredFields = false
   ;
 
@@ -174,6 +177,17 @@ class RegisterReq extends $pb.GeneratedMessage {
   $core.bool hasDevice() => $_has(7);
   @$pb.TagNumber(8)
   void clearDevice() => clearField(8);
+
+  @$pb.TagNumber(9)
+  $3.Timestamp get timeName => $_getN(8);
+  @$pb.TagNumber(9)
+  set timeName($3.Timestamp v) { setField(9, v); }
+  @$pb.TagNumber(9)
+  $core.bool hasTimeName() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearTimeName() => clearField(9);
+  @$pb.TagNumber(9)
+  $3.Timestamp ensureTimeName() => $_ensure(8);
 }
 
 class RegisterResp extends $pb.GeneratedMessage {

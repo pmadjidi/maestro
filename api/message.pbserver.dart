@@ -15,24 +15,24 @@ import 'message.pbjson.dart';
 
 export 'message.pb.dart';
 
-abstract class MaestroServiceBase extends $pb.GeneratedService {
-  $async.Future<$4.MsgResp> chatt($pb.ServerContext ctx, $4.MsgReq request);
+abstract class MessageServiceBase extends $pb.GeneratedService {
+  $async.Future<$4.MsgResp> msg($pb.ServerContext ctx, $4.MsgReq request);
 
   $pb.GeneratedMessage createRequest($core.String method) {
     switch (method) {
-      case 'Chatt': return $4.MsgReq();
+      case 'Msg': return $4.MsgReq();
       default: throw $core.ArgumentError('Unknown method: $method');
     }
   }
 
   $async.Future<$pb.GeneratedMessage> handleCall($pb.ServerContext ctx, $core.String method, $pb.GeneratedMessage request) {
     switch (method) {
-      case 'Chatt': return this.chatt(ctx, request);
+      case 'Msg': return this.msg(ctx, request);
       default: throw $core.ArgumentError('Unknown method: $method');
     }
   }
 
-  $core.Map<$core.String, $core.dynamic> get $json => MaestroServiceBase$json;
-  $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> get $messageJson => MaestroServiceBase$messageJson;
+  $core.Map<$core.String, $core.dynamic> get $json => MessageServiceBase$json;
+  $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> get $messageJson => MessageServiceBase$messageJson;
 }
 

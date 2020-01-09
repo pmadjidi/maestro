@@ -43,6 +43,7 @@ func newDatabase(cfg *ServerConfig) * sql.DB{
 		"LastName TEXT," +
 		"Email TEXT," +
 		"Phone TEXT," +
+		"stamp NUMERIC," +
 		"Device TEXT )"
 
 	createAddressDb := "CREATE TABLE IF NOT EXISTS address (" +
@@ -51,7 +52,40 @@ func newDatabase(cfg *ServerConfig) * sql.DB{
 		"Street TEXT," +
 		"City TEXT," +
 		"State TEXT," +
+		"STATUS  INTEGER," +
+		"stamp NUMERIC," +
 		"Zip TEXT)"
+
+
+	createTopicDb := "CREATE TABLE IF NOT EXISTS topics (" +
+		"id INTEGER PRIMARY KEY," +
+		"userid TEXT," +
+		"status INTEGER," +
+		"stamp NUMERIC," +
+		"topic TEXT)"
+
+	/*
+	type MsgReq struct {
+		Id                   string               `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+		Text                 []string             `protobuf:"bytes,2,rep,name=text,proto3" json:"text,omitempty"`
+		Pic                  [][]byte             `protobuf:"bytes,3,rep,name=pic,proto3" json:"pic,omitempty"`
+		ParentId             string               `protobuf:"bytes,4,opt,name=parentId,proto3" json:"parentId,omitempty"`
+		Topic                string               `protobuf:"bytes,5,opt,name=topic,proto3" json:"topic,omitempty"`
+		TimeName             *timestamp.Timestamp `protobuf:"bytes,6,opt,name=time_name,json=timeName,proto3" json:"time_name,omitempty"`
+		XXX_NoUnkeyedLiteral struct{}             `json:"-"`
+		XXX_unrecognized     []byte               `json:"-"`
+		XXX_sizecache        int32                `json:"-"`
+	}
+	*/
+
+	createMessagesDb := "CREATE TABLE IF NOT EXISTS messages (" +
+		"id INTEGER PRIMARY KEY," +
+		"mid TEXT," +
+		"topic TEXT," +
+		"Pic BLOB," +
+		"parentid TEXT," +
+		"status INTEGER," +
+		"stamp NUMERIC)"
 
 
 	err := os.MkdirAll("./db/", os.ModePerm)
@@ -69,6 +103,11 @@ func newDatabase(cfg *ServerConfig) * sql.DB{
 	handleError(err)
 	_,err = db.Exec(createAddressDb)
 	handleError(err)
+	_,err = db.Exec(createTopicDb)
+	handleError(err)
+	_,err = db.Exec(createMessagesDb)
+	handleError(err)
+
 	return db
 }
 
@@ -79,7 +118,8 @@ func (a *App) readUsersFromDatabase() {
 		"users.LastName,users.Email,users.Phone,users.Device, address.Zip,address.Street,address.City,address.State FROM users left  join address using(uid)   ")
 	handleError(err)
 	for rows.Next() {
-		u := User{&RegisterReq{}, &sync.RWMutex{}, "", NewFlag(), time.Now(), 0}
+		u := User{&RegisterReq{}, &sync.RWMutex{}, "", NewFlag(), time.Now(), 0,make(chan *Message),
+		make([]string,0)}
 		ad := RegisterReq_Address{}
 		u.Address = &ad
 		var  status int
@@ -97,12 +137,14 @@ func (a *App) readUsersFromDatabase() {
 	fmt.Printf("%d users for %s\n",len(a.users.db),a.cfg.APP_NAME)
 }
 
-func (a *App) databaseServer() {
+func (a *App) databaseManager() {
 	fmt.Println("Database Server, Entering processing loop...")
 	for {
 		select {
 		case users := <-a.UserDbQ:
 			a.presistUser(users)
+			case messages := <- a.MsgDBQ:
+			a.presistMessage(messages)
 		default:
 		}
 	}

@@ -19,18 +19,25 @@ type App struct {
 	cfg       *ServerConfig
 	server    *grpc.Server
 	users     *usersdb
+	messages  *messagesdb
 	loginQ    chan *loginEnvelope
 	registerQ chan *registerEnvelope
+	msgQ      chan *msgEnvelope
 	UserDbQ   chan []*User
+	MsgDBQ    chan[]*Message
 	DATABASE  *sql.DB
 }
 
 func newApp() *App {
 	cfg := createLoginServerConfig()
-	app := App{make(chan bool), make(map[string]Service), cfg, grpc.NewServer(), newUserdb(cfg.ARRAY_PRE_ALLOCATION_LIMIT),
+	app := App{make(chan bool), make(map[string]Service), cfg, grpc.NewServer(),
+		newUserdb(cfg.ARRAY_PRE_ALLOCATION_LIMIT),
+		newMessageDb(),
 		make(chan *loginEnvelope, cfg.SERVER_QEUEU_LENGTH),
 		make(chan *registerEnvelope, cfg.SERVER_QEUEU_LENGTH),
+		make(chan *msgEnvelope,cfg.SERVER_QEUEU_LENGTH),
 		make(chan []*User, cfg.SERVER_QEUEU_LENGTH),
+		make(chan []*Message, cfg.SERVER_QEUEU_LENGTH),
 		newDatabase(cfg),
 	}
 	app.readUsersFromDatabase()
@@ -43,6 +50,8 @@ func (a *App) registerServices() {
 	a.services["loginServices"] = ls
 	rs := newRegisterService(a.registerQ, a.cfg)
 	a.services["registerServices"] = rs
+	ms := newMsgService(a.msgQ,a.cfg)
+	a.services["messageService"] = ms
 }
 
 func (a *App) start() {
@@ -53,8 +62,11 @@ func (a *App) start() {
 			fmt.Printf("RPC Registring loginService...\n")
 			RegisterLoginServer(a.server, s.(LoginServer))
 		case "registerServices":
-			fmt.Printf("RPC Registring RegisterServer...\n")
+			fmt.Printf("RPC Registring RegisterService...\n")
 			RegisterRegisterServer(a.server, s.(RegisterServer))
+		case "messageService":
+			fmt.Printf("RPC Registring MessageService...\n")
+			RegisterMessageServer(a.server,s.(MessageServer))
 		}
 	}
 
@@ -72,8 +84,12 @@ func (a *App) start() {
 
 func (a *App) Run() {
 	a.readUsersFromDatabase()
+	//a.readMessagesFromDatabase()
+	//a.readSubscriptionsFromDatabase()
 	go a.userManager()
-	go a.databaseServer()
+	go a.messageManager()
+	go a.databaseManager()
+
 }
 
 

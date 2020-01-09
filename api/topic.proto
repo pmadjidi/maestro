@@ -1,0 +1,20 @@
+syntax = "proto3";
+package api;
+
+import "status.proto";
+
+message TopicReq{
+    string topic = 1;
+}
+
+
+message TopicResp{
+    string id  = 1;
+    Status status = 2;
+}
+
+
+service Topic {
+    rpc subscribe(TopicReq) returns (TopicResp);
+    rpc unsubscribe(TopicReq) returns (TopicResp);
+}

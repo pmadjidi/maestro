@@ -17,8 +17,8 @@ import 'status.pbenum.dart' as $0;
 class MsgReq extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo('MsgReq', package: const $pb.PackageName('api'), createEmptyInstance: create)
     ..aOS(1, 'id')
-    ..pPS(2, 'text')
-    ..p<$core.List<$core.int>>(3, 'pic', $pb.PbFieldType.PY)
+    ..aOS(2, 'text')
+    ..a<$core.List<$core.int>>(3, 'pic', $pb.PbFieldType.OY)
     ..aOS(4, 'parentId', protoName: 'parentId')
     ..aOS(5, 'topic')
     ..aOM<$3.Timestamp>(6, 'timeName', subBuilder: $3.Timestamp.create)
@@ -50,10 +50,22 @@ class MsgReq extends $pb.GeneratedMessage {
   void clearId() => clearField(1);
 
   @$pb.TagNumber(2)
-  $core.List<$core.String> get text => $_getList(1);
+  $core.String get text => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set text($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasText() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearText() => clearField(2);
 
   @$pb.TagNumber(3)
-  $core.List<$core.List<$core.int>> get pic => $_getList(2);
+  $core.List<$core.int> get pic => $_getN(2);
+  @$pb.TagNumber(3)
+  set pic($core.List<$core.int> v) { $_setBytes(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasPic() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPic() => clearField(3);
 
   @$pb.TagNumber(4)
   $core.String get parentId => $_getSZ(3);
@@ -126,13 +138,13 @@ class MsgResp extends $pb.GeneratedMessage {
   void clearStatus() => clearField(2);
 }
 
-class MaestroApi {
+class MessageApi {
   $pb.RpcClient _client;
-  MaestroApi(this._client);
+  MessageApi(this._client);
 
-  $async.Future<MsgResp> chatt($pb.ClientContext ctx, MsgReq request) {
+  $async.Future<MsgResp> msg($pb.ClientContext ctx, MsgReq request) {
     var emptyResponse = MsgResp();
-    return _client.invoke<MsgResp>(ctx, 'Maestro', 'Chatt', request, emptyResponse);
+    return _client.invoke<MsgResp>(ctx, 'Message', 'Msg', request, emptyResponse);
   }
 }
 

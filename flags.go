@@ -9,6 +9,7 @@ const (
 	BLOCKED    = 4
 	EXTERNAL = 8
 	SUPERUSER = 16
+	NEW = 32
 )
 
 

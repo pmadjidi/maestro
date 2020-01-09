@@ -108,7 +108,7 @@ func (r *registerService) Register(ctx context.Context, req *RegisterReq) (*Regi
 		switch res.Status {
 		case   Status_ERROR:
 			r.stats.errors += 1
-			return  nil, errors.New(Status_name[int32(Status_ERROR)])
+			return  nil, errors.New(Status_ERROR.String())
 		case  Status_EXITSTS:
 			r.stats.success += 1
 			return res,nil

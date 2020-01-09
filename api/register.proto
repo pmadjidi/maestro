@@ -2,6 +2,7 @@ syntax = "proto3";
 package api;
 
 import "status.proto";
+import "google/protobuf/timestamp.proto";
 
 message RegisterReq{
     string userName = 1;
@@ -18,6 +19,7 @@ message RegisterReq{
       }
     Address address = 7;
     string device = 8;
+    google.protobuf.Timestamp time_name = 9;
 }
 
 
