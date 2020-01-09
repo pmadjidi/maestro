@@ -91,6 +91,8 @@ func (m *msgService) Msg(srv Message_MsgServer) error {
 		//validate req
 		//get and id for the request
 
+		fmt.Printf("Got message: %s",req.Id)
+
 		e := newMsgEnvelope()
 
 		e.req <- req
@@ -112,7 +114,7 @@ func (m *msgService) Msg(srv Message_MsgServer) error {
 				log.Printf("sending response =%s", resp.GetId())
 			}
 		case <-time.After(time.Second):
-			return fmt.Errorf("Timeout...")
+			return fmt.Errorf("Connection with grpc client is broken, timeout...")
 		}
 	}
 }

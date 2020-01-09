@@ -29,7 +29,7 @@ type App struct {
 }
 
 func newApp() *App {
-	cfg := createLoginServerConfig()
+	cfg := createServerConfig()
 	app := App{make(chan bool), make(map[string]Service), cfg, grpc.NewServer(),
 		newUserdb(cfg.ARRAY_PRE_ALLOCATION_LIMIT),
 		newMessageDb(),

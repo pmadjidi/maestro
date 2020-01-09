@@ -78,7 +78,7 @@ func TestRegisterMaxNumberOfUsers(t *testing.T) {
 	}
 	defer conn.Close()
 	c := NewRegisterClient(conn)
-	cfg :=  createLoginServerConfig()
+	cfg :=  createServerConfig()
 
 	for i := 0; i < cfg.MAX_NUMBER_OF_USERS + 100 ; i++ {
 		status,err := registerArandomUser(c)

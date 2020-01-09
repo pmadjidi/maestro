@@ -17,11 +17,12 @@ type ServerConfig struct {
 	MESSAGE_RETENTION_PERIOD int
 	APP_SECRET string
 	RESETDATABASE_ON_START bool
+	MAX_NUMBER_OF_MESSAGES int
 }
 
 
 
-func createLoginServerConfig() *ServerConfig {
+func createServerConfig() *ServerConfig {
 
 	PORT := os.Getenv("PORT")
 	if PORT == "" {
@@ -79,6 +80,11 @@ func createLoginServerConfig() *ServerConfig {
 		RESETDATABASE_ON_START = true
 	}
 
+	MAX_NUMBER_OF_MESSAGES, err := strconv.Atoi(os.Getenv("MAX_NUMBER_OF_MESSAGES"))
+	if err != nil {
+		MAX_NUMBER_OF_MESSAGES = 10000
+	}
+
 
 
 	return &ServerConfig{
@@ -93,6 +99,7 @@ func createLoginServerConfig() *ServerConfig {
 		MESSAGE_RETENTION_PERIOD,
 		APP_SECRET,
 		RESETDATABASE_ON_START,
+		MAX_NUMBER_OF_MESSAGES,
 	}
 }
 

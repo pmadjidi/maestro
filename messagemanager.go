@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	. "maestro/api"
 	"time"
 )
 
@@ -18,7 +19,7 @@ func (a *App) messageManager() {
 			}
 			msg := newMessage(m)
 			a.messages.msg[m.Topic][m.Id] = msg
-
+			env.resp <- &MsgResp{Id:msg.GetId(),Status: Status_SUCCESS}
 
 		case <-time.After(20 * time.Second):
 			fmt.Printf("messageManager: Looking for changes in message database...\n")
@@ -31,9 +32,7 @@ func (a *App) messageManager() {
 						aMessage.Clear(DIRTY)
 					}
 					aMessage.Unlock()
-
 				}
-
 			}
 			if a.messages.dirtyCounter > 0 {
 				fmt.Printf("messageManager, dirty messages found [%d]...\n", len(a.messages.dirty))
