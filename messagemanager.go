@@ -67,7 +67,7 @@ func (a *App) presistMessage(messages []*Message) {
 		m.RLock()
 
 		_, err := tx.Exec("INSERT OR REPLACE INTO messages (mid, topic ,Pic,parentid,status,stamp) VALUES (?,?,?,?,?,?)",
-			m.GetId(), m.GetTopic(),m.GetPic(),m.GetParentId(),m.Get(),m.GetTimeName())
+			m.GetId(), m.GetTopic(),m.GetPic(),m.GetParentId(),m.Get(),m.GetTimeName().Seconds)
 		if err != nil {
 			tx.Rollback()
 			log.Fatal(err)
@@ -79,6 +79,7 @@ func (a *App) presistMessage(messages []*Message) {
 	for _, m := range messages {
 		fmt.Printf("Presisted message[%s]\n", m.Id)
 	}
+	fmt.Printf("Pressised %d messages in batch....",len(messages))
 }
 
 

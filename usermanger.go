@@ -152,6 +152,7 @@ func (a *App) presistUser(users []*User) {
 	for _, u := range users {
 		fmt.Printf("Presisted user[%s]\n", u.UserName)
 	}
+	fmt.Printf("Pressised %d Users in batch....",len(users))
 }
 
 

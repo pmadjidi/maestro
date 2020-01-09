@@ -84,7 +84,7 @@ func Test_Msg(t *testing.T) {
 		if err != nil {
 			t.Errorf("Should not fail rpc... %+v", err)
 		}  else {
-			err = registerArandomMessage(stream,100)
+			err = registerArandomMessage(stream,10000)
 			if err != nil {
 				t.Errorf("Should not fail in stream send or recive... %+v", err)
 			}

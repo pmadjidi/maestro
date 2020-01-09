@@ -25,6 +25,7 @@ type Message struct {
 func newMessage(m *MsgReq) *Message {
 	msg := Message{m,&sync.RWMutex{},NewFlag()}
 	msg.Id = uuid.New().String()
+	msg.Set(DIRTY)
 	return &msg
 }
 
