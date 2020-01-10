@@ -1,15 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"github.com/google/uuid"
-	"maestro/api"
+	. "maestro/api"
 	"sync"
 	"time"
 )
 
 type User struct {
-	*api.RegisterReq
+	*RegisterReq
 	*sync.RWMutex
 	uid string
 	status *Flag
@@ -20,13 +19,12 @@ type User struct {
 }
 
 
-func newUser(req *api.RegisterReq) *User {
+func newUser(req *RegisterReq) *User {
 	id := uuid.New()
-	fmt.Printf("%s Creating user %s with id %s \n",time.Now(),req.UserName,id)
+	//fmt.Printf("%s Creating user %s with id %s \n",time.Now(),req.UserName,id)
 	req.PassWord = hashAndSalt(req.PassWord)
 	newUser := User{req,&sync.RWMutex{},id.String(),NewFlag(),
 		time.Now(),0,make(chan *Message),make([]string,0)}
-	newUser.status.Set(DIRTY)
 	return &newUser
 }
 

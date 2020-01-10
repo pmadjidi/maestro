@@ -91,6 +91,7 @@ func TestLoginSuccess(t *testing.T) {
 
 func TestLoginBlock(t *testing.T) {
 	// Set up a connection to the server.
+	cfg := createServerConfig()
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
@@ -102,52 +103,34 @@ func TestLoginBlock(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	req := randomUserForTest(10)
-	_ , err = r.Register(ctx,req)
+	_, err = r.Register(ctx, req)
 	if err != nil {
 		t.Errorf("could not register user: %v", req)
 	} else {
-		log.Printf("Registered user %+v\n",req)
-	}
-	ctx1, cancel1 := context.WithTimeout(context.Background(), time.Second)
-	defer cancel1()
-	loginReq := &LoginReq{Device: req.Device}
-	ctx1 = metadata.AppendToOutgoingContext(ctx1, "username",req.UserName, "password", "wrongPassword")
-	lresp, err := c.Authenticate(
-		ctx1,
-		loginReq,
-	)
-	lresp,err = c.Authenticate(ctx1,loginReq)
-	if err != nil {
-		fmt.Printf("status is: %s",lresp.Status)
-		t.Errorf("could not authenticate %+v",err)
-	}
-	lresp,err = c.Authenticate(ctx1,loginReq)
-	if err != nil {
-		fmt.Printf("status is: %s",lresp.Status)
-		t.Errorf("could not authenticate %+v",err)
-	}
-	lresp,err = c.Authenticate(ctx1,loginReq)
-	if err != nil {
-		fmt.Printf("status is: %s",lresp.Status)
-		t.Errorf("could not authenticate %+v",err)
+		log.Printf("Registered user %+v\n", req)
 	}
 
-	ctx2, cancel2 := context.WithTimeout(context.Background(), time.Second)
-	defer cancel2()
-	ctx2 = metadata.AppendToOutgoingContext(ctx2, "username",req.UserName, "password", string(req.PassWord))
+	for i := 0; i > cfg.MAX_NUMBER_OF_FAILED_LOGIN_ATTEMPT; i++ {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		loginReq := &LoginReq{Device: req.Device}
+		ctx = metadata.AppendToOutgoingContext(ctx, "username", req.UserName, "password", "wrongPassword")
+		lresp, err := c.Authenticate(
+			ctx,
+			loginReq,
+		)
 
-	lresp,err = c.Authenticate(ctx2,loginReq)
-	if err != nil {
-		fmt.Printf("status is: %s",lresp.Status)
-		t.Errorf("could not authenticate %+v",err)
+		if err != nil {
+			fmt.Printf("status is: %s", lresp.Status)
+			t.Errorf("could not authenticate %+v", err)
+		}
+		if  i > cfg.MAX_NUMBER_OF_FAILED_LOGIN_ATTEMPT && lresp.Status != Status_BLOCKED {
+			t.Errorf("status shoud be blocked,%s", Status_BLOCKED.String())
+		}
 	}
 
-
-	if lresp.Status != Status_BLOCKED {
-		fmt.Printf("fail at %+v",lresp)
-		t.Errorf("test should block after tree trails with wrong password... %s",lresp.Status)
-	}
 }
+
 
 
 

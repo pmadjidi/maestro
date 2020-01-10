@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
 	"crypto/sha1"
@@ -134,17 +135,17 @@ func randomUserForTest(size int) *RegisterReq{
 		Device: RandomString(size)}
 }
 
-func randomMessageForTest(size int) *MsgReq{
+func randomMessageForTest(size int,topic int) *MsgReq{
 	if size <= 12 {
 		size = 12
 	}
 
 	return &MsgReq{
-		Id: RandomString(size),
+		Id:uuid.New().String(),
 		Text: RandomString(size),
 		Pic: []byte(RandomString(size)),
 		ParentId: RandomString(size),
-		Topic: RandomString(size),
+		Topic: strconv.Itoa(topic),
 		TimeName: &timestamp.Timestamp{},
 		}
 }

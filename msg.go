@@ -22,10 +22,15 @@ type Message struct {
 	*Flag
 }
 
-func newMessage(m *MsgReq) *Message {
+func newMessage(req ...*MsgReq) *Message {
+	var m *MsgReq
+	if len(req) == 0 {
+		m = &MsgReq{}
+	} else {
+		m = req[0]
+	}
 	msg := Message{m,&sync.RWMutex{},NewFlag()}
 	msg.Id = uuid.New().String()
-	msg.Set(DIRTY)
 	return &msg
 }
 
@@ -67,7 +72,7 @@ func newMsgService(Q chan *msgEnvelope, cfg *ServerConfig) *msgService {
 }
 
 func (m *msgService) Msg(srv Message_MsgServer) error {
-	log.Println("start new server")
+//	log.Println("start new server")
 	ctx := srv.Context()
 	for {
 		// exit if context is done
@@ -86,13 +91,13 @@ func (m *msgService) Msg(srv Message_MsgServer) error {
 			return nil
 		}
 		if err != nil {
-			log.Printf("receive error %v", err)
+			log.Printf("MSG receive error %v", err)
 			continue
 		}
 		//validate req
 		//get and id for the request
 
-		fmt.Printf("Got message: %s",req.Id)
+		//fmt.Printf("Got message: %s",req.Id)
 
 		e := newMsgEnvelope()
 
@@ -112,7 +117,7 @@ func (m *msgService) Msg(srv Message_MsgServer) error {
 				log.Printf("send error %v", err)
 				return err
 			} else {
-				log.Printf("sending response =%s", resp.GetId())
+			//	log.Printf("sending response =%s", resp.GetId())
 			}
 		case <-time.After(time.Second):
 			return fmt.Errorf("Connection with grpc client is broken, timeout...")

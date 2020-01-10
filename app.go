@@ -84,7 +84,7 @@ func (a *App) start() {
 
 func (a *App) Run() {
 	a.readUsersFromDatabase()
-	//a.readMessagesFromDatabase()
+	a.readMessagesFromDatabase()
 	//a.readSubscriptionsFromDatabase()
 	go a.userManager()
 	go a.messageManager()

@@ -64,19 +64,6 @@ func newDatabase(cfg *ServerConfig) * sql.DB{
 		"stamp NUMERIC," +
 		"topic TEXT)"
 
-	/*
-	type MsgReq struct {
-		Id                   string               `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-		Text                 []string             `protobuf:"bytes,2,rep,name=text,proto3" json:"text,omitempty"`
-		Pic                  [][]byte             `protobuf:"bytes,3,rep,name=pic,proto3" json:"pic,omitempty"`
-		ParentId             string               `protobuf:"bytes,4,opt,name=parentId,proto3" json:"parentId,omitempty"`
-		Topic                string               `protobuf:"bytes,5,opt,name=topic,proto3" json:"topic,omitempty"`
-		TimeName             *timestamp.Timestamp `protobuf:"bytes,6,opt,name=time_name,json=timeName,proto3" json:"time_name,omitempty"`
-		XXX_NoUnkeyedLiteral struct{}             `json:"-"`
-		XXX_unrecognized     []byte               `json:"-"`
-		XXX_sizecache        int32                `json:"-"`
-	}
-	*/
 
 	createMessagesDb := "CREATE TABLE IF NOT EXISTS messages (" +
 		"id INTEGER PRIMARY KEY," +
@@ -128,7 +115,7 @@ func (a *App) readUsersFromDatabase() {
 		handleError(err)
 		u.status.Set(uint(status))
 		if !u.status.Is(DELETED) {
-			fmt.Printf("Reading user %+v\n",u)
+			//fmt.Printf("Reading user %+v\n",u)
 			a.users.db[u.UserName] = &u
 		} else {
 			fmt.Printf("User %+v is marked deleted skipping...\n", u)
@@ -136,6 +123,37 @@ func (a *App) readUsersFromDatabase() {
 	}
 	fmt.Printf("%d users for %s\n",len(a.users.db),a.cfg.APP_NAME)
 }
+
+
+func (a *App) readMessagesFromDatabase() {
+	var messageCounter int
+	fmt.Printf("Cashing messaging database....\n")
+	rows, err := a.DATABASE.Query("SELECT mid, topic ,Pic,parentid,status,stamp FROM messages")
+	handleError(err)
+	for rows.Next() {
+		m := newMessage()
+		var  status  int
+		var stamp int64
+		err = rows.Scan(&m.Id,&m.Topic,&m.Pic,&m.ParentId,&status,&stamp)
+		handleError(err)
+		m.Set(uint(status))
+		if !m.Is(DELETED) && m.Topic != ""{
+			fmt.Printf("Reading message %s",m.Id)
+			_,ok := a.messages.msg[m.Topic]
+			if !ok {
+				a.messages.msg[m.Topic] = make(map[string]*Message)
+			}
+			a.messages.msg[m.Topic][m.Id] = m
+			messageCounter++
+		} else {
+			fmt.Printf("User %+v is marked deleted skipping...\n", m.Id)
+		}
+	}
+	fmt.Printf("%d messages for %s\n",messageCounter,a.cfg.APP_NAME)
+}
+
+
+
 
 func (a *App) databaseManager() {
 	fmt.Println("Database Server, Entering processing loop...")

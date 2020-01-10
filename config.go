@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"strconv"
+	"time"
 )
 
 type ServerConfig struct {
@@ -17,7 +18,9 @@ type ServerConfig struct {
 	MESSAGE_RETENTION_PERIOD int
 	APP_SECRET string
 	RESETDATABASE_ON_START bool
-	MAX_NUMBER_OF_MESSAGES int
+	MAX_NUMBER_OF_MESSAGES_PER_TOPIC int
+	WRITE_LATENCY time.Duration
+	MAX_NUMBER_OF_TOPICS int
 }
 
 
@@ -43,7 +46,7 @@ func createServerConfig() *ServerConfig {
 
 	MAX_NUMBER_OF_USERS, err := strconv.Atoi(os.Getenv("MAX_NUMBER_OF_USERS"))
 	if err != nil {
-		MAX_NUMBER_OF_USERS = 10000
+		MAX_NUMBER_OF_USERS = 100
 	}
 	MAX_NUMBER_OF_FAILED_LOGIN_ATTEMPT, err := strconv.Atoi(os.Getenv("MAX_NUMBER_OF_FAILED_LOGIN_ATTEMPT"))
 	if err != nil {
@@ -80,10 +83,21 @@ func createServerConfig() *ServerConfig {
 		RESETDATABASE_ON_START = true
 	}
 
-	MAX_NUMBER_OF_MESSAGES, err := strconv.Atoi(os.Getenv("MAX_NUMBER_OF_MESSAGES"))
+	MAX_NUMBER_OF_MESSAGES_PER_TOPIC, err := strconv.Atoi(os.Getenv("MAX_NUMBER_OF_MESSAGES_PER_TOPIC"))
 	if err != nil {
-		MAX_NUMBER_OF_MESSAGES = 10000
+		MAX_NUMBER_OF_MESSAGES_PER_TOPIC = 10000
 	}
+
+	WRITE_LATENCY, err := time.ParseDuration(os.Getenv("WRITE_LATENCY"))
+	if err != nil {
+		WRITE_LATENCY = 300
+	}
+
+	MAX_NUMBER_OF_TOPICS , err := strconv.Atoi(os.Getenv("MAX_NUMBER_OF_TOPICS"))
+	if err != nil {
+		MAX_NUMBER_OF_TOPICS = 10000
+	}
+
 
 
 
@@ -99,7 +113,9 @@ func createServerConfig() *ServerConfig {
 		MESSAGE_RETENTION_PERIOD,
 		APP_SECRET,
 		RESETDATABASE_ON_START,
-		MAX_NUMBER_OF_MESSAGES,
+		MAX_NUMBER_OF_MESSAGES_PER_TOPIC,
+		WRITE_LATENCY,
+		MAX_NUMBER_OF_TOPICS,
 	}
 }
 

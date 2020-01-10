@@ -51,7 +51,7 @@ func TestRegisterUser(t *testing.T) {
 }
 
 func registerArandomUser(rc RegisterClient) (Status,error) {
-	clientDeadline := time.Now().Add(time.Duration(20) * time.Second)
+	clientDeadline := time.Now().Add(time.Duration(30) * time.Second)
 	ctx, cancel := context.WithDeadline(context.Background(), clientDeadline)
 	defer cancel()
 	req := randomUserForTest(10)
@@ -80,7 +80,9 @@ func TestRegisterMaxNumberOfUsers(t *testing.T) {
 	c := NewRegisterClient(conn)
 	cfg :=  createServerConfig()
 
-	for i := 0; i < cfg.MAX_NUMBER_OF_USERS + 100 ; i++ {
+	cfg.MAX_NUMBER_OF_USERS = 100
+
+	for i := 0; i < cfg.MAX_NUMBER_OF_USERS + 10 ; i++ {
 		status,err := registerArandomUser(c)
 		if err != nil {
 			t.Errorf("Should not fail rpc... %+v", err)

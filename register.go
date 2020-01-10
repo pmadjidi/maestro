@@ -115,7 +115,6 @@ func (r *registerService) Register(ctx context.Context, req *RegisterReq) (*Regi
 		case Status_SUCCESS:
 			r.stats.success += 1
 			token := *(<- env.token)
-			fmt.Printf("Got token %s\n",token)
 			ctx = metadata.AppendToOutgoingContext(ctx, "app", r.cfg.APP_NAME, "bearer-bin",token)
 			return res,nil
 		default:

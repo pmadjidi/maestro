@@ -4,23 +4,36 @@ import (
 	"fmt"
 	"google.golang.org/grpc"
 	"log"
-	"testing"
 	. "maestro/api"
-//	"time"
+	"sync"
+	"testing"
+	"time"
+
+	//	"time"
 	"context"
 )
 
 
-func registerArandomMessage(stream Message_MsgClient,numberOfMessages int) error  {
+func registerArandomMessage(stream Message_MsgClient,cfg  *ServerConfig ) error  {
+	numberOfMessages := cfg.MAX_NUMBER_OF_MESSAGES_PER_TOPIC -	1
+
 	var messagePipe = make(chan *MsgReq,numberOfMessages)
 	var sendFail,reciveFail chan *error
 	sendFail = make(chan *error,numberOfMessages)
 	reciveFail = make(chan *error,numberOfMessages)
 
-	go func()  {
-		for msgReq := range messagePipe {
-			fmt.Printf("Got message %s",msgReq.GetId())
-			err := stream.SendMsg(msgReq)
+
+	close(messagePipe)
+
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func( )  {
+		defer wg.Done()
+		for i := 0; i < numberOfMessages; i++ {
+			r := randomMessageForTest(100,i)
+			err := stream.Send(r)
 			if err != nil {
 				sendFail <- &err
 				break
@@ -28,10 +41,14 @@ func registerArandomMessage(stream Message_MsgClient,numberOfMessages int) error
 		}
 		close(sendFail)
 	}()
+
+	wg.Add(1)
 	go func()  {
+		defer wg.Done()
 		for i := 0; i < numberOfMessages; i++ {
-			err := stream.RecvMsg(&MsgResp{})
-			if err != nil {
+			resp,err := stream.Recv()
+			fmt.Printf("recived %s\n",resp.Status.String())
+			if err != nil || resp.Status != Status_SUCCESS{
 				reciveFail <- &err
 				break
 			}
@@ -39,13 +56,7 @@ func registerArandomMessage(stream Message_MsgClient,numberOfMessages int) error
 		close(reciveFail)
 	}()
 
-	for i := 0; i < numberOfMessages; i++ {
-		r := randomMessageForTest(10)
-		PrettyPrint(*r)
-		messagePipe <- r
-	}
 
-	close(messagePipe)
 
 
 	for e := range sendFail {
@@ -60,31 +71,33 @@ func registerArandomMessage(stream Message_MsgClient,numberOfMessages int) error
 		}
 	}
 
+	wg.Wait()
 	return nil
 
 }
 
 
 func Test_Msg(t *testing.T) {
-	// Set up a connection to the server.
-	NUMBER_OF_TRAIL := 5
-	//clientDeadline := time.Now().Add(time.Duration(20) * time.Second)
-	//ctx, cancel := context.WithDeadline(context.Background(), clientDeadline)
-	//defer cancel()
+
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
 	defer conn.Close()
 	c := NewMessageClient(conn)
+	cfg := createServerConfig()
+	cfg.MAX_NUMBER_OF_TOPICS = 20
+	cfg.MAX_NUMBER_OF_MESSAGES_PER_TOPIC = 1000
 
-
-	for i := 0; i < NUMBER_OF_TRAIL; i++ {
-		stream,err := c.Msg(context.Background())
+	for i := 0; i < cfg.MAX_NUMBER_OF_TOPICS  -1 ; i++ {
+		clientDeadline := time.Now().Add(time.Duration(30) * time.Second)
+		ctx, cancel := context.WithDeadline(context.Background(), clientDeadline)
+		defer cancel()
+		stream,err := c.Msg(ctx)
 		if err != nil {
 			t.Errorf("Should not fail rpc... %+v", err)
 		}  else {
-			err = registerArandomMessage(stream,10000)
+			err = registerArandomMessage(stream,cfg)
 			if err != nil {
 				t.Errorf("Should not fail in stream send or recive... %+v", err)
 			}

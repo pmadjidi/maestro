@@ -42,7 +42,7 @@ func (a *App) userManager() {
 			} else {
 				env.resp <- &LoginResp{Status: status}
 			}
-		case <-time.After(20 * time.Second):
+		case <-time.After(a.cfg.WRITE_LATENCY * time.Millisecond):
 			fmt.Printf("loginServer: Looking for changes in user database...\n")
 			for _, aUser := range a.users.db {
 				aUser.Lock()
@@ -76,6 +76,7 @@ func (a *App) userManager() {
 					env.resp <- &RegisterResp{Status: Status_EXITSTS}
 				} else {
 					newUser := newUser(req)
+					newUser.status.Set(DIRTY)
 					a.users.db[newUser.UserName] = newUser
 					token,err := a.issueToken(7 * 24 * 60 * 60,req.GetUserName(),req.GetDevice())
 					if err != nil {
@@ -127,7 +128,6 @@ func (a *App) tryLogin(userName string, pass []byte) Status {
 func (a *App) presistUser(users []*User) {
 	tx, err := a.DATABASE.Begin()
 	handleError(err)
-	fmt.Printf("presistUser: Presisting %d users ",len(users))
 	for i := 0 ; i <  len(users) ; i++ {
 		u := users[i]
 		u.RLock()
@@ -149,9 +149,11 @@ func (a *App) presistUser(users []*User) {
 		u.RUnlock()
 	}
 	handleError(tx.Commit())
+	/*
 	for _, u := range users {
 		fmt.Printf("Presisted user[%s]\n", u.UserName)
 	}
+	 */
 	fmt.Printf("Pressised %d Users in batch....",len(users))
 }
 

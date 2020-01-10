@@ -6,25 +6,12 @@ import (
 	. "maestro/api"
 )
 
-func TestFlagInit(t *testing.T) {
-	u := newUser(&RegisterReq{})
-	if !u.status.Is(DIRTY) {
-		t.Errorf("Flag should be dirty at user creation %d",u.status.Get())
-	}
-}
-
-func TestFlagClearDirty(t *testing.T) {
-	u := newUser(&RegisterReq{})
-	u.status.Clear(DIRTY)
-	if u.status.Get() != 0 {
-		t.Errorf("Flag should be zero %d",u.status.Get())
-	}
-}
 
 
 func TestFlagDirtyAndBlocked(t *testing.T) {
 	u := newUser(&RegisterReq{})
 	u.status.Set(BLOCKED)
+	u.status.Set(DIRTY)
 	fmt.Printf("flag set to blocked  %t \n",u.status.Is(BLOCKED))
 
 	if !u.status.Is(BLOCKED) {
