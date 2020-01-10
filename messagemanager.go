@@ -38,7 +38,7 @@ func (a *App) messageManager() {
 
 
 		case <-time.After(a.cfg.WRITE_LATENCY * time.Millisecond):
-			fmt.Printf("messageManager: Looking for changes in message database...\n")
+			//fmt.Printf("messageManager: Looking for changes in message database...\n")
 			for _, messages := range a.messages.msg {
 				for _, aMessage := range messages {
 					aMessage.Lock()
@@ -59,8 +59,6 @@ func (a *App) messageManager() {
 				case <-time.After(2 * time.Second):
 					fmt.Printf("messageManager: database server blocked ...\n")
 				}
-			} else {
-				fmt.Printf("messageManager: No change to message database...\n")
 			}
 
 		case <-a.quit:
@@ -96,5 +94,5 @@ func (a *App) presistMessage(messages []*Message) {
 		}
 
 	*/
-	fmt.Printf("Pressised %d messages in batch....", len(messages))
+	fmt.Printf("Pressised %d messages in batch....\n", len(messages))
 }

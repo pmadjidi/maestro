@@ -91,8 +91,8 @@ func (m *msgService) Msg(srv Message_MsgServer) error {
 			return nil
 		}
 		if err != nil {
-			log.Printf("MSG receive error %v", err)
-			continue
+			//log.Printf("MSG receive error %v", err)
+			return err
 		}
 		//validate req
 		//get and id for the request

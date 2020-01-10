@@ -43,7 +43,7 @@ func (a *App) userManager() {
 				env.resp <- &LoginResp{Status: status}
 			}
 		case <-time.After(a.cfg.WRITE_LATENCY * time.Millisecond):
-			fmt.Printf("loginServer: Looking for changes in user database...\n")
+			//fmt.Printf("loginServer: Looking for changes in user database...\n")
 			for _, aUser := range a.users.db {
 				aUser.Lock()
 				if aUser.status.Is(DIRTY) == true {
@@ -62,9 +62,8 @@ func (a *App) userManager() {
 				case <-time.After(2 * time.Second):
 					fmt.Printf("loginServer: database server blocked ...\n")
 				}
-			} else {
-				fmt.Printf("loginServer: No change to user database...\n")
 			}
+
 		case env := <-a.registerQ:
 			if len(a.users.db) > a.cfg.MAX_NUMBER_OF_USERS {
 				env.resp <- &RegisterResp{Status: Status_MAXIMUN_NUMBER_OF_USERS_REACHED}
@@ -154,7 +153,7 @@ func (a *App) presistUser(users []*User) {
 		fmt.Printf("Presisted user[%s]\n", u.UserName)
 	}
 	 */
-	fmt.Printf("Pressised %d Users in batch....",len(users))
+	fmt.Printf("Pressised %d Users in batch....\n",len(users))
 }
 
 

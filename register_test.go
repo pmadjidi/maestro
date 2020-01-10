@@ -17,7 +17,7 @@ const (
 )
 
 
-func ainit() {
+func init() {
 	go func() {
 		app := newApp()
 		app.start()
