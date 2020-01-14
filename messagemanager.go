@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"log"
 	. "maestro/api"
-	"sync"
 	"time"
 )
 
-func (a *App) messageManager(wg *sync.WaitGroup) {
-	defer wg.Done()
+func (a *App) messageManager() {
+
 	fmt.Println("messageManager, Entering processing loop...")
 	for {
 		select {

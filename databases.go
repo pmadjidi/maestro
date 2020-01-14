@@ -5,9 +5,9 @@ import (
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"os"
-	"sync"
 	"time"
 	. "maestro/api"
+	"sync"
 )
 
 
@@ -158,8 +158,7 @@ func (a *App) readMessagesFromDatabase() {
 
 
 
-func (a *App) databaseManager(wg *sync.WaitGroup) {
-	defer wg.Done()
+func (a *App) databaseManager() {
 	fmt.Println("Database Server, Entering processing loop...")
 	for {
 		select {

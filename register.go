@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"google.golang.org/grpc/metadata"
 	. "maestro/api"
+	"sync"
 )
 
 type registerEnvelope struct {
@@ -22,6 +23,7 @@ func newRegisterEnvelope() *registerEnvelope {
 
 
 type registerService struct {
+	*sync.RWMutex
 	name string
 	stats *metrics
 	system *Server
@@ -32,7 +34,7 @@ func (l *registerService) Name() string {
 }
 
 func newRegisterService(s *Server) *registerService {
-	return &registerService{"registerService",newMetrics(),s}
+	return &registerService{&sync.RWMutex{},"registerService",newMetrics(),s}
 }
 
 
@@ -118,13 +120,19 @@ func (r *registerService) Register(ctx context.Context, req *RegisterReq) (*Empt
 	case  <-env.resp:
 		switch env.status {
 		case   Status_ERROR:
+			r.Lock()
 			r.stats.errors += 1
+			r.Unlock()
 			return  &Empty{}, errors.New(Status_ERROR.String())
 		case  Status_EXITSTS:
-			r.stats.success += 1
+			r.Lock()
+			r.stats.success +=1
+			r.Unlock()
 			return &Empty{},errors.New(Status_EXITSTS.String())
 		case Status_SUCCESS:
+			r.Lock()
 			r.stats.success += 1
+			r.Unlock()
 			ctx = metadata.AppendToOutgoingContext(ctx, "app",app.cfg.APP_NAME, "bearer-bin",*env.token)
 			return &Empty{},nil
 		default:

@@ -5,9 +5,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 	"log"
-	"sync"
-	"time"
 	. "maestro/api"
+	"time"
 )
 
 func (a *App) issueToken(durationInSeconds int,userName,device,appName string) (string,error) {
@@ -28,7 +27,7 @@ func (a *App) issueToken(durationInSeconds int,userName,device,appName string) (
 	}
 }
 
-func (a *App) userManager(wg *sync.WaitGroup) {
+func (a *App) userManager() {
 
 	fmt.Println("LoginServer, Entering processing loop...")
 	for {
