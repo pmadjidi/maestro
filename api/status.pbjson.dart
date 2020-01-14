@@ -30,6 +30,8 @@ const Status$json = const {
     const {'1': 'NOAUTH', '2': 19},
     const {'1': 'MAXIMUN_NUMBER_OF_TOPICS_REACHED', '2': 20},
     const {'1': 'MAXIMUN_NUMBER_OF_MESSAGES_PEER_TOPIC_REACHED', '2': 21},
+    const {'1': 'NEW', '2': 22},
+    const {'1': 'INVALID_APPNAME', '2': 23},
   ],
 };
 

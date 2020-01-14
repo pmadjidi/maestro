@@ -14,7 +14,7 @@ import 'status.pbenum.dart' as $0;
 
 class TopicReq extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo('TopicReq', package: const $pb.PackageName('api'), createEmptyInstance: create)
-    ..aOS(1, 'topic')
+    ..pPS(1, 'topic')
     ..hasRequiredFields = false
   ;
 
@@ -34,13 +34,7 @@ class TopicReq extends $pb.GeneratedMessage {
   static TopicReq _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get topic => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set topic($core.String v) { $_setString(0, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasTopic() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearTopic() => clearField(1);
+  $core.List<$core.String> get topic => $_getList(0);
 }
 
 class TopicResp extends $pb.GeneratedMessage {

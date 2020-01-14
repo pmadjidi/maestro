@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/google/uuid"
+	"google.golang.org/grpc/metadata"
 	"io"
 	"log"
 	. "maestro/api"
@@ -12,7 +13,8 @@ import (
 
 type msgEnvelope struct {
 	req  chan *MsgReq
-	resp chan *MsgResp
+	resp  chan struct {}
+	Status
 }
 
 
@@ -35,8 +37,8 @@ func newMessage(req ...*MsgReq) *Message {
 }
 
 type messagesdb struct {
-	msg map[string]map[string]*Message
-	subscriptions map[string]*User
+	msg map[string][]*Message
+	subscriptions map[string][]*User
 	dirty []*Message
 	blocked []*Message
 	dirtyCounter int64
@@ -44,8 +46,8 @@ type messagesdb struct {
 }
 
 func newMessageDb () *messagesdb {
-	return &messagesdb{make(map[string]map[string]*Message),
-		make(map[string]*User),
+	return &messagesdb{make(map[string][]*Message),
+		make(map[string][]*User),
 		make([]*Message,0),make([]*Message,0),0,0}
 }
 
@@ -53,27 +55,51 @@ func newMessageDb () *messagesdb {
 
 
 func newMsgEnvelope() *msgEnvelope {
-	return &msgEnvelope{make(chan *MsgReq, 1), make(chan *MsgResp, 1)}
+	return &msgEnvelope{make(chan *MsgReq, 1), make(chan struct{}),Status_NEW}
 }
 
 type msgService struct {
 	name  string
-	Q     chan *msgEnvelope
-	cfg   *ServerConfig
 	stats *metrics
+	system *Server
 }
 
 func (m *msgService) Name() string {
 	return "msgService"
 }
 
-func newMsgService(Q chan *msgEnvelope, cfg *ServerConfig) *msgService {
-	return &msgService{"msgService", Q, cfg, newMetrics()}
+func newMsgService(s *Server) *msgService {
+	return &msgService{"msgService", newMetrics(),s}
 }
 
 func (m *msgService) Msg(srv Message_MsgServer) error {
 //	log.Println("start new server")
+
+	var token,appName []string
 	ctx := srv.Context()
+
+
+	md, val := metadata.FromIncomingContext(ctx)
+	if val {
+		token = md.Get("bearer-bin")
+		appName = md.Get("app")
+		fmt.Printf("Token := %s", token)
+		if len(token) == 0 {
+			return fmt.Errorf(Status_NOAUTH.String())
+		}
+	}
+
+	if len(appName) != 0 && appName[0] != "" {
+		return fmt.Errorf(Status_INVALID_APPNAME.String())
+	}
+
+	app,err  := m.system.GetApp(appName[0])
+	if err != nil {
+		return err
+	}
+
+
+
 	for {
 		// exit if context is done
 		// or continue
@@ -88,6 +114,7 @@ func (m *msgService) Msg(srv Message_MsgServer) error {
 		if err == io.EOF {
 			// return will close stream from server side
 			log.Println("exit")
+
 			return nil
 		}
 		if err != nil {
@@ -104,21 +131,20 @@ func (m *msgService) Msg(srv Message_MsgServer) error {
 		e.req <- req
 
 		select {
-		case m.Q <- e:
+		case app.msgQ <- e:
 		case <-time.After(time.Second):
-			srv.Send(&MsgResp{Id: "", Status: Status_TIMEOUT})
+			return fmt.Errorf(Status_TIMEOUT.String())
 		case <-ctx.Done():
 			return ctx.Err()
 		}
 
 		select {
-		case resp := <-e.resp:
-			if err := srv.Send(resp); err != nil {
-				log.Printf("send error %v", err)
-				return err
+		case  <-e.resp:
+			if e.Status == Status_SUCCESS {
+				return nil
 			} else {
-			//	log.Printf("sending response =%s", resp.GetId())
-			}
+				return  fmt.Errorf(e.Status.String())
+		}
 		case <-time.After(time.Second):
 			return fmt.Errorf("Connection with grpc client is broken, timeout...")
 		}

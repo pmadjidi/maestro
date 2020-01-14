@@ -12,29 +12,37 @@ func (a *App) messageManager() {
 	for {
 		select {
 		case env := <-a.msgQ:
-			var res *MsgResp = nil
 			m := <-env.req
 			_, ok := a.messages.msg[m.Topic]
 			if !ok {
 				if len(a.messages.msg) < a.cfg.MAX_NUMBER_OF_TOPICS {
-					a.messages.msg[m.Topic] = make(map[string]*Message)
+					a.messages.msg[m.Topic] = make([]*Message,10)
 				} else {
-					res = &MsgResp{Id: "", Status: Status_MAXIMUN_NUMBER_OF_TOPICS_REACHED}
+					env.Status = Status_MAXIMUN_NUMBER_OF_TOPICS_REACHED
 				}
 			}
 
-			if res == nil {
+			 if env.Status != Status_MAXIMUN_NUMBER_OF_TOPICS_REACHED {
 				if len(a.messages.msg[m.Topic]) < a.cfg.MAX_NUMBER_OF_MESSAGES_PER_TOPIC {
 					msg := newMessage(m)
 					msg.Set(DIRTY)
-					a.messages.msg[m.Topic][m.Id] = msg
-					res = &MsgResp{Id: msg.GetId(), Status: Status_SUCCESS}
+					a.messages.msg[m.Topic] = append(a.messages.msg[m.Topic], msg)
+					subscriptions,ok :=  a.messages.subscriptions[msg.Topic]
+					if ok {
+						for _, user := range subscriptions {
+							user.Lock()
+							user.timeLine = append(user.timeLine,msg)
+							user.status.Set(DIRTY)
+							user.Unlock()
+						}
+					}
+					env.Status = Status_SUCCESS
 				} else {
-					res = &MsgResp{Id: "", Status: Status_MAXIMUN_NUMBER_OF_MESSAGES_PEER_TOPIC_REACHED}
+					env.Status = Status_MAXIMUN_NUMBER_OF_MESSAGES_PEER_TOPIC_REACHED
 				}
 			}
 			//fmt.Printf("messageManager status is %s\n",res.Status.String())
-			env.resp <- res
+			env.resp <- struct{}{}
 
 
 		case <-time.After(a.cfg.WRITE_LATENCY * time.Millisecond):

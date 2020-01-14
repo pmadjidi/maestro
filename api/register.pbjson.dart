@@ -19,6 +19,7 @@ const RegisterReq$json = const {
     const {'1': 'address', '3': 7, '4': 1, '5': 11, '6': '.api.RegisterReq.Address', '10': 'address'},
     const {'1': 'device', '3': 8, '4': 1, '5': 9, '10': 'device'},
     const {'1': 'time_name', '3': 9, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'timeName'},
+    const {'1': 'AppName', '3': 10, '4': 1, '5': 9, '10': 'AppName'},
   ],
   '3': const [RegisterReq_Address$json],
 };
@@ -33,18 +34,14 @@ const RegisterReq_Address$json = const {
   ],
 };
 
-const RegisterResp$json = const {
-  '1': 'RegisterResp',
-  '2': const [
-    const {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
-    const {'1': 'status', '3': 2, '4': 1, '5': 14, '6': '.api.Status', '10': 'status'},
-  ],
+const Empty$json = const {
+  '1': 'Empty',
 };
 
 const RegisterServiceBase$json = const {
   '1': 'Register',
   '2': const [
-    const {'1': 'Register', '2': '.api.RegisterReq', '3': '.api.RegisterResp'},
+    const {'1': 'Register', '2': '.api.RegisterReq', '3': '.api.Empty'},
   ],
 };
 
@@ -52,6 +49,6 @@ const RegisterServiceBase$messageJson = const {
   '.api.RegisterReq': RegisterReq$json,
   '.api.RegisterReq.Address': RegisterReq_Address$json,
   '.google.protobuf.Timestamp': $3.Timestamp$json,
-  '.api.RegisterResp': RegisterResp$json,
+  '.api.Empty': Empty$json,
 };
 

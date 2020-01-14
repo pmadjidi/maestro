@@ -16,7 +16,7 @@ import 'message.pbjson.dart';
 export 'message.pb.dart';
 
 abstract class MessageServiceBase extends $pb.GeneratedService {
-  $async.Future<$4.MsgResp> msg($pb.ServerContext ctx, $4.MsgReq request);
+  $async.Future<$4.MsgReq> msg($pb.ServerContext ctx, $4.MsgReq request);
 
   $pb.GeneratedMessage createRequest($core.String method) {
     switch (method) {

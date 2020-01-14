@@ -22,12 +22,12 @@ func TestLoginFail(t *testing.T) {
 	c := NewLoginClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	req := randomUserForTest(10)
-	resp, err := r.Register(ctx,req)
+	req := randomUserForTest(1)[0]
+	_, err = r.Register(ctx,req)
 	if err != nil {
 		log.Fatalf("could not greet: %v", err)
 	} else {
-		log.Printf("Greeting: %s, %s", resp.GetStatus(),resp.Id)
+		log.Printf("Greeting: %s, %s",req.FirstName,req.LastName)
 	}
 
 	ctx1, cancel1 := context.WithTimeout(context.Background(), time.Second)
@@ -60,12 +60,12 @@ func TestLoginSuccess(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	req := randomUserForTest(10)
-	response , err := r.Register(ctx,req)
+	req := randomUserForTest(1)[0]
+	_ , err = r.Register(ctx,req)
 	if err != nil {
 		t.Errorf("could not register user: %v", req)
 	} else {
-		log.Printf("Registered user %+v\n",response.Id)
+		log.Printf("Registered user %s %s\n",req.FirstName,req.LastName)
 	}
 	ctx1, cancel1 := context.WithTimeout(context.Background(), time.Second)
 	defer cancel1()
@@ -102,7 +102,7 @@ func TestLoginBlock(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	req := randomUserForTest(10)
+	req := randomUserForTest(1)[0]
 	_, err = r.Register(ctx, req)
 	if err != nil {
 		t.Errorf("could not register user: %v", req)

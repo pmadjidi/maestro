@@ -10,29 +10,29 @@ import (
 
 type registerEnvelope struct {
 	req  chan *RegisterReq
-	resp chan *RegisterResp
-	token chan *string
+	resp chan struct{}
+	token  *string
+	status Status
 }
 
 
 func newRegisterEnvelope() *registerEnvelope {
-	return &registerEnvelope{make(chan *RegisterReq, 1), make(chan *RegisterResp, 1),make(chan *string,1)}
+	return &registerEnvelope{make(chan *RegisterReq, 1), make(chan struct{}, 1),nil,Status_NEW}
 }
 
 
 type registerService struct {
 	name string
-	Q chan *registerEnvelope
-	cfg *ServerConfig
 	stats *metrics
+	system *Server
 }
 
 func (l *registerService) Name() string {
 	return l.name
 }
 
-func newRegisterService(Q chan *registerEnvelope,cfg *ServerConfig) *registerService {
-	return &registerService{"registerService",Q,cfg,newMetrics()}
+func newRegisterService(s *Server) *registerService {
+	return &registerService{"registerService",newMetrics(),s}
 }
 
 
@@ -45,29 +45,33 @@ func (r *registerService) validateReq(req *RegisterReq) Status {
 	Phone := req.GetPhone()
 	Adress := req.GetAddress()
 	Device := req.GetDevice()
+	appName := req.GetAppName()
 
-	if len(Username) == 0 || len(Username) > r.cfg.NAME_LENGTH_LIMIT {
+	if len(Username) == 0 || len(Username) > r.system.cfg.NAME_LENGTH_LIMIT {
 		return Status_INVALID_USERNAME
-	} else if len(passWord) == 0 || len(passWord) > r.cfg.NAME_LENGTH_LIMIT {
+	} else if len(passWord) == 0 || len(passWord) > r.system.cfg.NAME_LENGTH_LIMIT {
 		return Status_INVALID_PASSWORD
-	} else if len(FirstName) == 0 || len(FirstName) > r.cfg.NAME_LENGTH_LIMIT {
+	} else if len(FirstName) == 0 || len(FirstName) > r.system.cfg.NAME_LENGTH_LIMIT {
 		return Status_INVALID_FIRSTNAME
-	}else if len(LastName) == 0 || len(LastName) > r.cfg.NAME_LENGTH_LIMIT {
+	}else if len(LastName) == 0 || len(LastName) > r.system.cfg.NAME_LENGTH_LIMIT {
 		return Status_INVALID_LASTNAME
-	}else if len(Email) == 0 || len(Email) > r.cfg.NAME_LENGTH_LIMIT {
+	}else if len(Email) == 0 || len(Email) > r.system.cfg.NAME_LENGTH_LIMIT {
 		return Status_INVALID_EMAIL
-	}else if len(Phone) == 0 || len(Phone) > r.cfg.NAME_LENGTH_LIMIT {
+	}else if len(Phone) == 0 || len(Phone) > r.system.cfg.NAME_LENGTH_LIMIT {
 		return Status_INVALID_PHONE
-	}else if len(Device) == 0 || len(Device) > r.cfg.NAME_LENGTH_LIMIT {
+	}else if len(Device) == 0 || len(Device) > r.system.cfg.NAME_LENGTH_LIMIT {
 		return Status_INVALID_DEVICE
-	}else if len(Adress.State) == 0 || len(Adress.State)  > r.cfg.NAME_LENGTH_LIMIT {
+	}else if len(Adress.State) == 0 || len(Adress.State)  > r.system.cfg.NAME_LENGTH_LIMIT {
 		return Status_INVALID_ADRESS
-	}else if len(Adress.City) == 0 || len(Adress.City)  > r.cfg.NAME_LENGTH_LIMIT {
+	}else if len(Adress.City) == 0 || len(Adress.City)  > r.system.cfg.NAME_LENGTH_LIMIT {
 		return Status_INVALID_ADRESS
-	}else if len(Adress.Street) == 0 || len(Adress.Street)  > r.cfg.NAME_LENGTH_LIMIT {
+	}else if len(Adress.Street) == 0 || len(Adress.Street)  > r.system.cfg.NAME_LENGTH_LIMIT {
 		return Status_INVALID_ADRESS
-	}else if len(Adress.Zip) == 0 || len(Adress.Zip)  > r.cfg.NAME_LENGTH_LIMIT {
+	}else if len(Adress.Zip) == 0 || len(Adress.Zip)  > r.system.cfg.NAME_LENGTH_LIMIT {
 		return Status_INVALID_ADRESS
+
+	} else if len(appName) == 0 || len(appName)  > r.system.cfg.NAME_LENGTH_LIMIT {
+		return Status_INVALID_APPNAME
 	} else {
 		return Status_VALIDATED
 	}
@@ -75,13 +79,25 @@ func (r *registerService) validateReq(req *RegisterReq) Status {
 
 
 
-func (r *registerService) Register(ctx context.Context, req *RegisterReq) (*RegisterResp, error) {
+func (r *registerService) Register(ctx context.Context, req *RegisterReq) (*Empty,error) {
+
 
 
 	validate := r.validateReq(req)
 
 	if validate  != Status_VALIDATED {
-		return &RegisterResp{Status: validate}, nil
+		return &Empty{},fmt.Errorf(validate.String())
+	}
+
+
+	app,err :=  r.system.GetApp(req.AppName)
+
+	if err != nil {
+		app, err = r.system.NewApp(req.GetAppName())
+		if err != nil {
+			fmt.Printf("Error here...%s",err)
+			return &Empty{}, err
+		}
 	}
 
 
@@ -89,36 +105,30 @@ func (r *registerService) Register(ctx context.Context, req *RegisterReq) (*Regi
 	env.req <- req
 
 	select {
-	case r.Q <- env:
+	case app.registerQ <- env:
 	case <-ctx.Done():
 		err := ctx.Err()
 		fmt.Printf("Register, in error to kernel: %+v\n", err)
 		r.stats.timeouts += 1
-		return &RegisterResp{Status: Status_TIMEOUT}, nil
+		return &Empty{}, fmt.Errorf(Status_TIMEOUT.String())
 
 	}
 
 	select {
-	case <-ctx.Done():
-		err := ctx.Err()
-		fmt.Printf("Register, in error from kernel: %+v\n", err)
-		r.stats.timeouts += 1
-		return &RegisterResp{Status: Status_TIMEOUT}, nil
-	case res := <-env.resp:
-		switch res.Status {
+	case  <-env.resp:
+		switch env.status {
 		case   Status_ERROR:
 			r.stats.errors += 1
-			return  nil, errors.New(Status_ERROR.String())
+			return  &Empty{}, errors.New(Status_ERROR.String())
 		case  Status_EXITSTS:
 			r.stats.success += 1
-			return res,nil
+			return &Empty{},errors.New(Status_EXITSTS.String())
 		case Status_SUCCESS:
 			r.stats.success += 1
-			token := *(<- env.token)
-			ctx = metadata.AppendToOutgoingContext(ctx, "app", r.cfg.APP_NAME, "bearer-bin",token)
-			return res,nil
+			ctx = metadata.AppendToOutgoingContext(ctx, "app",app.cfg.APP_NAME, "bearer-bin",*env.token)
+			return &Empty{},nil
 		default:
-			return res,nil
+			return &Empty{},nil
 		}
 	}
 }

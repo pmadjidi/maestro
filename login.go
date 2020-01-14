@@ -23,13 +23,12 @@ func newLoginEnvelope() *loginEnvelope {
 
 type loginService struct {
 	name  string
-	Q     chan *loginEnvelope
-	cfg   *ServerConfig
 	stats *metrics
+	system *Server
 }
 
-func newLoginService(Q chan *loginEnvelope, cfg *ServerConfig) *loginService {
-	return &loginService{"loginService", Q, cfg, newMetrics()}
+func newLoginService(s *Server) *loginService {
+	return &loginService{"loginService", newMetrics(),s}
 }
 
 func (l *loginService) Name() string {
@@ -40,7 +39,7 @@ func (l *loginService) Authenticate(ctx context.Context, req *LoginReq) (*LoginR
 
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return nil, errors.New("Missing metadata from incomming request")
+		return nil, fmt.Errorf(Status_NOAUTH.String())
 	}
 
 	/*
@@ -48,16 +47,31 @@ func (l *loginService) Authenticate(ctx context.Context, req *LoginReq) (*LoginR
 		return nil, errors.New("Invalid token")
 	}
 	 */
+
+
+
 	username := md.Get("username")
 	password := md.Get("password")
+	appName := md.Get("app")
 	device := req.GetDevice()
+
+	if len(appName) == 0 || appName[0] == "" {
+		return nil, fmt.Errorf(Status_INVALID_APPNAME.String())
+	}
+
+	app,err  := l.system.GetApp(appName[0])
+	if err != nil {
+		return nil,err
+	}
+
+
 
 	fmt.Printf("Got Auth request for %s,%s\n", username, password)
 
 	if len(username) == 0 || len(password) == 0 {
 		l.stats.invalidCalls += 1
 		return &LoginResp{Status: Status_FAIL}, nil
-	} else if len(password[0]) < l.cfg.MINIMUM_PASSWORD_LENGTH || len(password) > l.cfg.NAME_LENGTH_LIMIT {
+	} else if len(password[0]) < l.system.cfg.MINIMUM_PASSWORD_LENGTH || len(password) > l.system.cfg.NAME_LENGTH_LIMIT {
 		l.stats.invalidCalls += 1
 		fmt.Printf("Inavild Password\n")
 		return &LoginResp{Status: Status_FAIL}, nil
@@ -69,7 +83,7 @@ func (l *loginService) Authenticate(ctx context.Context, req *LoginReq) (*LoginR
 	env.device = &device
 
 	select {
-	case l.Q <- env:
+	case app.loginQ <- env:
 	case <-ctx.Done():
 		err := ctx.Err()
 		fmt.Printf("Authenticate, in error: %+v", err)
@@ -98,7 +112,7 @@ func (l *loginService) Authenticate(ctx context.Context, req *LoginReq) (*LoginR
 			l.stats.success += 1
 			token := *<-env.token
 			fmt.Printf("token is set to: %s\n", token)
-			grpc.SendHeader(ctx, metadata.New(map[string]string{"bearer-bin": token, "app": l.cfg.APP_NAME}))
+			grpc.SendHeader(ctx, metadata.New(map[string]string{"bearer-bin": token, "app": appName[0]}))
 			//ctx = metadata.(ctx, "app", l.cfg.APP_NAME, "bearer",env.token)
 			return res, nil
 		default:

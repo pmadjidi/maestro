@@ -75,17 +75,20 @@ func newDatabase(cfg *ServerConfig) * sql.DB{
 		"stamp NUMERIC)"
 
 
-	err := os.MkdirAll("./db/", os.ModePerm)
+	fmt.Printf("Storage path is set to [%s]",cfg.STORAGEPATH)
+	dbPath := cfg.STORAGEPATH + "db/"
+	err := os.MkdirAll(dbPath, os.ModePerm)
 	handleError(err)
 
-	dbName := "./db/" + cfg.APP_NAME + ".db"
+	dbName := dbPath + cfg.APP_NAME + ".db"
 
 	if cfg.RESETDATABASE_ON_START {
 		fmt.Printf("RESETDATABASE_ON_START is set to true, removing old database...\n")
 		os.Remove(dbName)
 	}
 
-	db, _ := sql.Open("sqlite3", dbName)
+	db, err := sql.Open("sqlite3", dbName)
+	handleError(err)
 	_, err = db.Exec(createUserDb)
 	handleError(err)
 	_,err = db.Exec(createAddressDb)
@@ -105,8 +108,8 @@ func (a *App) readUsersFromDatabase() {
 		"users.LastName,users.Email,users.Phone,users.Device, address.Zip,address.Street,address.City,address.State FROM users left  join address using(uid)   ")
 	handleError(err)
 	for rows.Next() {
-		u := User{&RegisterReq{}, &sync.RWMutex{}, "", NewFlag(), time.Now(), 0,make(chan *Message),
-		make([]string,0)}
+		u := User{&RegisterReq{}, &sync.RWMutex{}, "", NewFlag(), time.Now(), 0,make([]*Message,0),
+		make(map[string]int64)}
 		ad := RegisterReq_Address{}
 		u.Address = &ad
 		var  status int
@@ -141,9 +144,9 @@ func (a *App) readMessagesFromDatabase() {
 			fmt.Printf("Reading message %s",m.Id)
 			_,ok := a.messages.msg[m.Topic]
 			if !ok {
-				a.messages.msg[m.Topic] = make(map[string]*Message)
+				a.messages.msg[m.Topic] = make([]*Message,10)
 			}
-			a.messages.msg[m.Topic][m.Id] = m
+			a.messages.msg[m.Topic]= append(a.messages.msg[m.Topic],m)
 			messageCounter++
 		} else {
 			fmt.Printf("User %+v is marked deleted skipping...\n", m.Id)

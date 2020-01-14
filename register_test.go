@@ -1,30 +1,28 @@
 package main
 
-
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc/metadata"
-	"log"
-	"testing"
-	"time"
 	"google.golang.org/grpc"
+	"log"
 	. "maestro/api"
+	"sync"
+	"testing"
 )
 
 const (
-	address     = "localhost:50051"
+	address = "localhost:50051"
 )
-
 
 func init() {
 	go func() {
-		app := newApp()
-		app.start()
+		server := NewServer()
+		server.Start()
 		fmt.Printf("Exiting....")
 	}()
 }
 
+/*
 func TestRegisterUser(t *testing.T) {
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
@@ -33,42 +31,25 @@ func TestRegisterUser(t *testing.T) {
 	}
 	defer conn.Close()
 	c := NewRegisterClient(conn)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
 	defer cancel()
-	req := randomUserForTest(10)
+	req := randomUserForTest(1)[0]
+	PrettyPrint(req)
 	//r, err := c.Register(ctx,req)
 	var header, trailer metadata.MD
-	r, err := c.Register(
+	_, err = c.Register(
 		ctx,
 		req,
 		grpc.Header(&header),
 		grpc.Trailer(&trailer),
 	)
 	if err != nil {
-		log.Fatalf("could not greet: %v", err)
+		log.Fatalf("could not greet: %s", err)
 	}
-	log.Printf("Greeting: %s, %s", r.GetStatus(),r.Id)
+	log.Printf("Greeting: %s, %s",req.FirstName,req.LastName)
 }
 
-func registerArandomUser(rc RegisterClient) (Status,error) {
-	clientDeadline := time.Now().Add(time.Duration(30) * time.Second)
-	ctx, cancel := context.WithDeadline(context.Background(), clientDeadline)
-	defer cancel()
-	req := randomUserForTest(10)
-	var header, trailer metadata.MD
-	defer cancel()
-	r, err := rc.Register(
-		ctx,
-		req,
-		grpc.Header(&header),
-		grpc.Trailer(&trailer),
-	)
-	if err != nil {
-		fmt.Printf("Error is %s",err)
-		return Status_ERROR,err
-	}
-	return r.GetStatus(),nil
-}
+*/
 
 func TestRegisterMaxNumberOfUsers(t *testing.T) {
 	// Set up a connection to the server.
@@ -78,23 +59,26 @@ func TestRegisterMaxNumberOfUsers(t *testing.T) {
 	}
 	defer conn.Close()
 	c := NewRegisterClient(conn)
-	cfg :=  createServerConfig()
+	cfg := createServerConfig()
 
-	cfg.MAX_NUMBER_OF_USERS = 100
+	req := randomUsersForTests(cfg.MAX_NUMBER_OF_USERS, cfg.MAX_NUMBER_OF_APPS)
 
-	for i := 0; i < cfg.MAX_NUMBER_OF_USERS + 10 ; i++ {
-		status,err := registerArandomUser(c)
-		if err != nil {
-			t.Errorf("Should not fail rpc... %+v", err)
-		} else if !(status == Status_SUCCESS ||  status == Status_MAXIMUN_NUMBER_OF_USERS_REACHED) {
-			t.Errorf("Should eventually fail with Status_MAXIMUN_NUMBER_OF_USERS_REACHED ... %s", status.String())
-		}
+	var wg sync.WaitGroup
+	for sysIndex, system := range req {
+		wg.Add(1)
+		go func(sysIndex int,system []*RegisterReq, t *testing.T) {
+			defer wg.Done()
+			for userIndex, user := range system {
+
+				fmt.Printf("Processing for System[%d],User[%d]\n", sysIndex, userIndex)
+				_, err := c.Register(
+					context.Background(),
+					user, )
+				if err != nil {
+					t.Errorf("Should not fail %s", err.Error())
+				}
+			}
+		}(sysIndex,system,t)
 	}
-
+	wg.Wait()
 }
-
-
-
-
-
-

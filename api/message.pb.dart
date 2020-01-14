@@ -22,6 +22,7 @@ class MsgReq extends $pb.GeneratedMessage {
     ..aOS(4, 'parentId', protoName: 'parentId')
     ..aOS(5, 'topic')
     ..aOM<$3.Timestamp>(6, 'timeName', subBuilder: $3.Timestamp.create)
+    ..e<$0.Status>(7, 'status', $pb.PbFieldType.OE, defaultOrMaker: $0.Status.SUCCESS, valueOf: $0.Status.valueOf, enumValues: $0.Status.values)
     ..hasRequiredFields = false
   ;
 
@@ -95,56 +96,24 @@ class MsgReq extends $pb.GeneratedMessage {
   void clearTimeName() => clearField(6);
   @$pb.TagNumber(6)
   $3.Timestamp ensureTimeName() => $_ensure(5);
-}
 
-class MsgResp extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo('MsgResp', package: const $pb.PackageName('api'), createEmptyInstance: create)
-    ..aOS(1, 'id')
-    ..e<$0.Status>(2, 'status', $pb.PbFieldType.OE, defaultOrMaker: $0.Status.SUCCESS, valueOf: $0.Status.valueOf, enumValues: $0.Status.values)
-    ..hasRequiredFields = false
-  ;
-
-  MsgResp._() : super();
-  factory MsgResp() => create();
-  factory MsgResp.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory MsgResp.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-  MsgResp clone() => MsgResp()..mergeFromMessage(this);
-  MsgResp copyWith(void Function(MsgResp) updates) => super.copyWith((message) => updates(message as MsgResp));
-  $pb.BuilderInfo get info_ => _i;
-  @$core.pragma('dart2js:noInline')
-  static MsgResp create() => MsgResp._();
-  MsgResp createEmptyInstance() => create();
-  static $pb.PbList<MsgResp> createRepeated() => $pb.PbList<MsgResp>();
-  @$core.pragma('dart2js:noInline')
-  static MsgResp getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MsgResp>(create);
-  static MsgResp _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set id($core.String v) { $_setString(0, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearId() => clearField(1);
-
-  @$pb.TagNumber(2)
-  $0.Status get status => $_getN(1);
-  @$pb.TagNumber(2)
-  set status($0.Status v) { setField(2, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasStatus() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearStatus() => clearField(2);
+  @$pb.TagNumber(7)
+  $0.Status get status => $_getN(6);
+  @$pb.TagNumber(7)
+  set status($0.Status v) { setField(7, v); }
+  @$pb.TagNumber(7)
+  $core.bool hasStatus() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearStatus() => clearField(7);
 }
 
 class MessageApi {
   $pb.RpcClient _client;
   MessageApi(this._client);
 
-  $async.Future<MsgResp> msg($pb.ClientContext ctx, MsgReq request) {
-    var emptyResponse = MsgResp();
-    return _client.invoke<MsgResp>(ctx, 'Message', 'Msg', request, emptyResponse);
+  $async.Future<MsgReq> msg($pb.ClientContext ctx, MsgReq request) {
+    var emptyResponse = MsgReq();
+    return _client.invoke<MsgReq>(ctx, 'Message', 'Msg', request, emptyResponse);
   }
 }
 

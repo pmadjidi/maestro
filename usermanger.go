@@ -9,14 +9,16 @@ import (
 	. "maestro/api"
 )
 
-func (a *App) issueToken(durationInSeconds int,userName,device string) (string,error) {
+func (a *App) issueToken(durationInSeconds int,userName,device,appName string) (string,error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"Issuer": a.cfg.APP_NAME,
 		"Username": userName,
+		"SuperUser": false,
 		"device": device,
 		"VALID": time.Now().Second() +  durationInSeconds, // vaid for a week
+		"AppName": appName,
 	})
-	tokenString, err := token.SignedString([]byte(a.cfg.APP_SECRET))
+	tokenString, err := token.SignedString([]byte(a.cfg.SYSTEM_SECRET))
 	if err != nil {
 		fmt.Printf("Error: %v", err)
 		return "", err
@@ -32,7 +34,7 @@ func (a *App) userManager() {
 		case env := <-a.loginQ:
 			status :=  a.tryLogin(*env.username,[]byte(*env.password))
 			if status == Status_SUCCESS {
-				token,err := a.issueToken(7 * 24 * 60 * 60,*env.username,*env.device)
+				token,err := a.issueToken(7 * 24 * 60 * 60,*env.username,*env.device,a.cfg.APP_NAME)
 				if err != nil {
 					env.resp <- &LoginResp{Status: Status_ERROR}
 				} else {
@@ -66,26 +68,27 @@ func (a *App) userManager() {
 
 		case env := <-a.registerQ:
 			if len(a.users.db) > a.cfg.MAX_NUMBER_OF_USERS {
-				env.resp <- &RegisterResp{Status: Status_MAXIMUN_NUMBER_OF_USERS_REACHED}
+				env.status = Status_MAXIMUN_NUMBER_OF_USERS_REACHED
 			} else {
 				req := <-env.req
 				_, exists := a.users.db[req.UserName]
 				if exists {
 					fmt.Printf("User %+v exists\n", req)
-					env.resp <- &RegisterResp{Status: Status_EXITSTS}
+					env.status = Status_EXITSTS
 				} else {
 					newUser := newUser(req)
 					newUser.status.Set(DIRTY)
 					a.users.db[newUser.UserName] = newUser
-					token,err := a.issueToken(7 * 24 * 60 * 60,req.GetUserName(),req.GetDevice())
+					token,err := a.issueToken(7 * 24 * 60 * 60,req.GetUserName(),req.GetDevice(),req.GetAppName())
 					if err != nil {
 						fmt.Printf("Error %+v",err)
-						env.resp <-  &RegisterResp{Id: newUser.uid, Status: Status_NOAUTH}
+						env.status = Status_NOAUTH
 					} else {
-						env.token <- &token
-						env.resp <- &RegisterResp{Id: newUser.uid, Status: Status_SUCCESS}
+						env.token = &token
+						env.status = Status_SUCCESS
 					}
 				}
+				env.resp <- struct{}{}
 			}
 		case <-a.quit:
 			break
@@ -118,7 +121,7 @@ func (a *App) tryLogin(userName string, pass []byte) Status {
 			aUser.status.Set(DIRTY)
 			return Status_BLOCKED
 		}
-		fmt.Printf("Login failed, wrong password %s,%s\n",userName,pass)
+		fmt.Printf("[%s] Login failed, wrong password %s,%s\n",a.name,userName,pass)
 		return Status_FAIL
 	}
 	return Status_SUCCESS
@@ -153,7 +156,7 @@ func (a *App) presistUser(users []*User) {
 		fmt.Printf("Presisted user[%s]\n", u.UserName)
 	}
 	 */
-	fmt.Printf("Pressised %d Users in batch....\n",len(users))
+	fmt.Printf("[%s] Pressised %d Users in batch....\n",a.name,len(users))
 }
 
 

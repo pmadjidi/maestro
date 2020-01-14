@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/dgrijalva/jwt-go"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -121,19 +122,62 @@ func handleError(err error) {
 	}
 }
 
-func randomUserForTest(size int) *RegisterReq{
-		if size <= 12 {
-			size = 12
+func randomUserForTest(size int) []*RegisterReq{
+		if size == 0 {
+			size = 1
 		}
-	    return &RegisterReq{UserName: RandomString(size),
-		PassWord: []byte(RandomString(size)),
-		FirstName: RandomString(size),
-		LastName: RandomString(size),
-		Email: RandomString(size - 10 ) +  "@gmail.com",
-		Phone: RandomString(size),
-		Address: &RegisterReq_Address{Street:RandomString(size),City: RandomString(size),State: RandomString(size),Zip: RandomString(size)},
-		Device: RandomString(size)}
+
+		reqArray := make([]*RegisterReq,0)
+
+		for i := 0;i< size ; i++ {
+		ps := strconv.Itoa(i)
+		reqArray =append(reqArray,&RegisterReq{UserName: "kalle" + ps,
+				PassWord:  []byte(RandomString(13)),
+				FirstName: "Kalle" + ps,
+				LastName:  "Svensson" + ps,
+				Email:    "kalle" + ps  + "@gmail.com",
+				Phone:     "08-12 18 " + ps,
+				Address:   &RegisterReq_Address{Street: "Tomtebogatan " + ps, City: "Stockholm", State: "Sweden", Zip: "113 " + ps},
+				Device:    "device-" + ps,
+				AppName:   "Test" + ps,})
+		}
+		return reqArray
 }
+
+
+func randomUsersForTests(size,systems int) [][]*RegisterReq{
+	if size == 0 {
+		size = 1
+	}
+
+	if systems == 0 {
+		systems = 1
+	}
+
+	sys := make([][]*RegisterReq,0)
+
+
+	for i := 0;i< systems ; i++ {
+		as := strconv.Itoa(i)
+		reqArray := make([]*RegisterReq,0)
+		for j := 0; j < size; j++ {
+			ps := strconv.Itoa(j)
+			reqArray = append(reqArray, &RegisterReq{UserName: "kalle" + ps,
+				PassWord:  []byte(RandomString(13)),
+				FirstName: "Kalle" + ps,
+				LastName:  "Svensson" + ps,
+				Email:     "kalle" + ps + "@gmail.com",
+				Phone:     "08-12 18 " + ps,
+				Address:   &RegisterReq_Address{Street: "Tomtebogatan " + ps, City: "Stockholm", State: "Sweden", Zip: "113 " + ps},
+				Device:    "device-" + ps,
+				AppName:   "Test" + as,})
+		}
+		sys = append(sys,reqArray)
+	}
+	return sys
+}
+
+
 
 func randomMessageForTest(size int,topic int) *MsgReq{
 	if size <= 12 {
@@ -148,4 +192,21 @@ func randomMessageForTest(size int,topic int) *MsgReq{
 		Topic: strconv.Itoa(topic),
 		TimeName: &timestamp.Timestamp{},
 		}
+}
+
+func decodeToken(token,appSecret string) (map[string]interface{},error) {
+	claims := jwt.MapClaims{}
+	_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(appSecret), nil
+	})
+	if err != nil {
+		return nil,err
+	}
+	// ... error handling
+
+	// do something with decoded claims
+	for key, val := range claims {
+		fmt.Printf("Key: %v, value: %v\n", key, val)
+	}
+	return claims,nil
 }

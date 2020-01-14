@@ -16,7 +16,7 @@ import 'register.pbjson.dart';
 export 'register.pb.dart';
 
 abstract class RegisterServiceBase extends $pb.GeneratedService {
-  $async.Future<$5.RegisterResp> register($pb.ServerContext ctx, $5.RegisterReq request);
+  $async.Future<$5.Empty> register($pb.ServerContext ctx, $5.RegisterReq request);
 
   $pb.GeneratedMessage createRequest($core.String method) {
     switch (method) {

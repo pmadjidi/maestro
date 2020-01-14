@@ -11,15 +11,12 @@ message MsgReq{
     string parentId = 4;
     string topic = 5;
     google.protobuf.Timestamp time_name = 6;
+    Status status = 7;
 }
 
 
-message MsgResp{
-    string id = 1;
-    Status status = 2;
-}
 
 
 service Message {
-    rpc Msg(stream MsgReq) returns (stream MsgResp);
+    rpc Msg(stream MsgReq) returns (stream MsgReq);
 }

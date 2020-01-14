@@ -12,8 +12,6 @@ import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'google/protobuf/timestamp.pb.dart' as $3;
 
-import 'status.pbenum.dart' as $0;
-
 class RegisterReq_Address extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo('RegisterReq.Address', package: const $pb.PackageName('api'), createEmptyInstance: create)
     ..aOS(1, 'street')
@@ -86,6 +84,7 @@ class RegisterReq extends $pb.GeneratedMessage {
     ..aOM<RegisterReq_Address>(7, 'address', subBuilder: RegisterReq_Address.create)
     ..aOS(8, 'device')
     ..aOM<$3.Timestamp>(9, 'timeName', subBuilder: $3.Timestamp.create)
+    ..aOS(10, 'AppName', protoName: 'AppName')
     ..hasRequiredFields = false
   ;
 
@@ -188,56 +187,45 @@ class RegisterReq extends $pb.GeneratedMessage {
   void clearTimeName() => clearField(9);
   @$pb.TagNumber(9)
   $3.Timestamp ensureTimeName() => $_ensure(8);
+
+  @$pb.TagNumber(10)
+  $core.String get appName => $_getSZ(9);
+  @$pb.TagNumber(10)
+  set appName($core.String v) { $_setString(9, v); }
+  @$pb.TagNumber(10)
+  $core.bool hasAppName() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearAppName() => clearField(10);
 }
 
-class RegisterResp extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo('RegisterResp', package: const $pb.PackageName('api'), createEmptyInstance: create)
-    ..aOS(1, 'id')
-    ..e<$0.Status>(2, 'status', $pb.PbFieldType.OE, defaultOrMaker: $0.Status.SUCCESS, valueOf: $0.Status.valueOf, enumValues: $0.Status.values)
+class Empty extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo('Empty', package: const $pb.PackageName('api'), createEmptyInstance: create)
     ..hasRequiredFields = false
   ;
 
-  RegisterResp._() : super();
-  factory RegisterResp() => create();
-  factory RegisterResp.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory RegisterResp.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-  RegisterResp clone() => RegisterResp()..mergeFromMessage(this);
-  RegisterResp copyWith(void Function(RegisterResp) updates) => super.copyWith((message) => updates(message as RegisterResp));
+  Empty._() : super();
+  factory Empty() => create();
+  factory Empty.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Empty.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  Empty clone() => Empty()..mergeFromMessage(this);
+  Empty copyWith(void Function(Empty) updates) => super.copyWith((message) => updates(message as Empty));
   $pb.BuilderInfo get info_ => _i;
   @$core.pragma('dart2js:noInline')
-  static RegisterResp create() => RegisterResp._();
-  RegisterResp createEmptyInstance() => create();
-  static $pb.PbList<RegisterResp> createRepeated() => $pb.PbList<RegisterResp>();
+  static Empty create() => Empty._();
+  Empty createEmptyInstance() => create();
+  static $pb.PbList<Empty> createRepeated() => $pb.PbList<Empty>();
   @$core.pragma('dart2js:noInline')
-  static RegisterResp getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RegisterResp>(create);
-  static RegisterResp _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set id($core.String v) { $_setString(0, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearId() => clearField(1);
-
-  @$pb.TagNumber(2)
-  $0.Status get status => $_getN(1);
-  @$pb.TagNumber(2)
-  set status($0.Status v) { setField(2, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasStatus() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearStatus() => clearField(2);
+  static Empty getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Empty>(create);
+  static Empty _defaultInstance;
 }
 
 class RegisterApi {
   $pb.RpcClient _client;
   RegisterApi(this._client);
 
-  $async.Future<RegisterResp> register($pb.ClientContext ctx, RegisterReq request) {
-    var emptyResponse = RegisterResp();
-    return _client.invoke<RegisterResp>(ctx, 'Register', 'Register', request, emptyResponse);
+  $async.Future<Empty> register($pb.ClientContext ctx, RegisterReq request) {
+    var emptyResponse = Empty();
+    return _client.invoke<Empty>(ctx, 'Register', 'Register', request, emptyResponse);
   }
 }
 

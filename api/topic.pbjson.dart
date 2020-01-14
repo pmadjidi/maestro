@@ -8,7 +8,7 @@
 const TopicReq$json = const {
   '1': 'TopicReq',
   '2': const [
-    const {'1': 'topic', '3': 1, '4': 1, '5': 9, '10': 'topic'},
+    const {'1': 'topic', '3': 1, '4': 3, '5': 9, '10': 'topic'},
   ],
 };
 
