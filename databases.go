@@ -158,7 +158,8 @@ func (a *App) readMessagesFromDatabase() {
 
 
 
-func (a *App) databaseManager() {
+func (a *App) databaseManager(wg *sync.WaitGroup) {
+	defer wg.Done()
 	fmt.Println("Database Server, Entering processing loop...")
 	for {
 		select {
@@ -166,6 +167,8 @@ func (a *App) databaseManager() {
 			a.presistUser(users)
 			case messages := <- a.MsgDBQ:
 			a.presistMessage(messages)
+			case  <- a.quit:
+			break
 		default:
 		}
 	}

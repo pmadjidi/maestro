@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	. "maestro/api"
+	"sync"
 )
 
 type Service interface {
@@ -50,9 +51,14 @@ func (a *App) start() {
 	a.readUsersFromDatabase()
 	a.readMessagesFromDatabase()
 	//a.readSubscriptionsFromDatabase()
-	go a.userManager()
-	go a.messageManager()
-	go a.databaseManager()
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go a.userManager(&wg)
+	wg.Add(1)
+	go a.messageManager(&wg)
+	wg.Add(1)
+	go a.databaseManager(&wg)
+	wg.Wait()
 
 
 }
