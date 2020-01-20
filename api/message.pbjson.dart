@@ -5,7 +5,7 @@
 // @dart = 2.3
 // ignore_for_file: camel_case_types,non_constant_identifier_names,library_prefixes,unused_import,unused_shown_name,return_of_invalid_type
 
-import 'google/protobuf/timestamp.pbjson.dart' as $3;
+import 'google/protobuf/timestamp.pbjson.dart' as $2;
 
 const MsgReq$json = const {
   '1': 'MsgReq',
@@ -29,6 +29,6 @@ const MessageServiceBase$json = const {
 
 const MessageServiceBase$messageJson = const {
   '.api.MsgReq': MsgReq$json,
-  '.google.protobuf.Timestamp': $3.Timestamp$json,
+  '.google.protobuf.Timestamp': $2.Timestamp$json,
 };
 

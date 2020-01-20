@@ -11,12 +11,14 @@ import (
 	"time"
 )
 
+type notify struct{}
+
 type msgEnvelope struct {
-	req  chan *MsgReq
-	resp  chan struct {}
+	messages chan []*Message
+	resp     chan notify
+	userName string
 	Status
 }
-
 
 type Message struct {
 	*MsgReq
@@ -24,43 +26,39 @@ type Message struct {
 	*Flag
 }
 
-func newMessage(req ...*MsgReq) *Message {
-	var m *MsgReq
-	if len(req) == 0 {
-		m = &MsgReq{}
-	} else {
-		m = req[0]
+func newMessage(reqs ...*MsgReq) []*Message {
+	res := make([]*Message, len(reqs))
+
+	for _, msg := range reqs {
+		m := Message{msg, &sync.RWMutex{}, NewFlag()}
+		m.Id = uuid.New().String()
+		res = append(res, &m)
 	}
-	msg := Message{m,&sync.RWMutex{},NewFlag()}
-	msg.Id = uuid.New().String()
-	return &msg
+	return res
 }
 
 type messagesdb struct {
-	msg map[string][]*Message
-	subscriptions map[string][]*User
-	dirty []*Message
-	blocked []*Message
-	dirtyCounter int64
+	msg            map[string][]*Message
+	subscriptions  map[string][]*User
+	dirty          []*Message
+	blocked        []*Message
+	dirtyCounter   int64
 	blockedCounter int64
 }
 
-func newMessageDb () *messagesdb {
+func newMessageDb() *messagesdb {
 	return &messagesdb{make(map[string][]*Message),
 		make(map[string][]*User),
-		make([]*Message,0),make([]*Message,0),0,0}
+		make([]*Message, 0), make([]*Message, 0), 0, 0}
 }
 
-
-
-
 func newMsgEnvelope() *msgEnvelope {
-	return &msgEnvelope{make(chan *MsgReq, 1), make(chan struct{}),Status_NEW}
+	return &msgEnvelope{make(chan []*Message, 1), make(chan notify), "", Status_NEW}
 }
 
 type msgService struct {
-	name  string
-	stats *metrics
+	name   string
+	stats  *metrics
 	system *Server
 }
 
@@ -69,15 +67,14 @@ func (m *msgService) Name() string {
 }
 
 func newMsgService(s *Server) *msgService {
-	return &msgService{"msgService", newMetrics(),s}
+	return &msgService{"msgService", newMetrics(), s}
 }
 
 func (m *msgService) Msg(srv Message_MsgServer) error {
-//	log.Println("start new server")
+	//	log.Println("start new server")
 
-	var token,appName []string
+	var token, appName []string
 	ctx := srv.Context()
-
 
 	md, val := metadata.FromIncomingContext(ctx)
 	if val {
@@ -93,13 +90,24 @@ func (m *msgService) Msg(srv Message_MsgServer) error {
 		return fmt.Errorf(Status_INVALID_APPNAME.String())
 	}
 
-	app,err  := m.system.GetApp(appName[0])
+	app, err := m.system.GetApp(appName[0])
 	if err != nil {
 		return err
 	}
 
+	var recievedSoFar = make([]*MsgReq,0)
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	defer wg.Wait()
+
+	go func() {
+		defer wg.Done()
 
 
+	}()
+
+	loop:
 	for {
 		// exit if context is done
 		// or continue
@@ -114,41 +122,41 @@ func (m *msgService) Msg(srv Message_MsgServer) error {
 		if err == io.EOF {
 			// return will close stream from server side
 			log.Println("exit")
-
-			return nil
+			break loop
 		}
 		if err != nil {
 			//log.Printf("MSG receive error %v", err)
 			return err
 		}
-		//validate req
-		//get and id for the request
 
-		//fmt.Printf("Got message: %s",req.Id)
+		recievedSoFar = append(recievedSoFar, req)
+	}
 
-		e := newMsgEnvelope()
+	//validate req
+	//get and id for the request
 
-		e.req <- req
+	//fmt.Printf("Got message: %s",req.Id)
 
-		select {
-		case app.msgQ <- e:
-		case <-time.After(time.Second):
-			return fmt.Errorf(Status_TIMEOUT.String())
-		case <-ctx.Done():
-			return ctx.Err()
+	e := newMsgEnvelope()
+	e.messages <- newMessage(recievedSoFar...)
+
+	select {
+	case app.msgRecQ <- e:
+	case <-time.After(time.Second):
+		return fmt.Errorf(Status_TIMEOUT.String())
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+
+	select {
+	case <-e.resp:
+		if e.Status == Status_SUCCESS {
+			return nil
+		} else {
+			return fmt.Errorf(e.Status.String())
 		}
-
-		select {
-		case  <-e.resp:
-			if e.Status == Status_SUCCESS {
-				return nil
-			} else {
-				return  fmt.Errorf(e.Status.String())
-		}
-		case <-time.After(time.Second):
-			return fmt.Errorf("Connection with grpc client is broken, timeout...")
-		}
+	case <-time.After(time.Second):
+		return fmt.Errorf("Connection with grpc client is broken, timeout...")
 	}
 }
-
 

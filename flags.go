@@ -10,6 +10,7 @@ const (
 	EXTERNAL = 8
 	SUPERUSER = 16
 	NEW = 32
+	RESET = 64
 )
 
 

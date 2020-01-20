@@ -10,17 +10,17 @@ import 'dart:async' as $async;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'dart:core' as $core;
-import 'register.pb.dart' as $5;
+import 'register.pb.dart' as $3;
 import 'register.pbjson.dart';
 
 export 'register.pb.dart';
 
 abstract class RegisterServiceBase extends $pb.GeneratedService {
-  $async.Future<$5.Empty> register($pb.ServerContext ctx, $5.RegisterReq request);
+  $async.Future<$3.Empty> register($pb.ServerContext ctx, $3.RegisterReq request);
 
   $pb.GeneratedMessage createRequest($core.String method) {
     switch (method) {
-      case 'Register': return $5.RegisterReq();
+      case 'Register': return $3.RegisterReq();
       default: throw $core.ArgumentError('Unknown method: $method');
     }
   }

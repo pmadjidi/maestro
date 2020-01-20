@@ -1,19 +1,24 @@
 package main
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/md5"
+	"crypto/rand"
+	"encoding/hex"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
-
+	"io"
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"log"
-	"math/rand"
 	"reflect"
 	"strconv"
 	. "maestro/api"
+	mathRand "math/rand"
 )
 
 
@@ -36,7 +41,7 @@ func RandomString(n int) string {
 
 	b := make([]rune, n)
 	for i := range b {
-		b[i] = letter[rand.Intn(len(letter))]
+		b[i] = letter[mathRand.Intn(len(letter))]
 	}
 	return string(b)
 }
@@ -162,8 +167,12 @@ func randomUsersForTests(size,systems int) [][]*RegisterReq{
 		reqArray := make([]*RegisterReq,0)
 		for j := 0; j < size; j++ {
 			ps := strconv.Itoa(j)
+			pass := []byte(RandomString(13))
+			if i < 5 && j < 5 {
+				ps = "testpass" + ps
+			}
 			reqArray = append(reqArray, &RegisterReq{UserName: "kalle" + ps,
-				PassWord:  []byte(RandomString(13)),
+				PassWord:  pass,
 				FirstName: "Kalle" + ps,
 				LastName:  "Svensson" + ps,
 				Email:     "kalle" + ps + "@gmail.com",
@@ -209,4 +218,44 @@ func decodeToken(token,appSecret string) (map[string]interface{},error) {
 		fmt.Printf("Key: %v, value: %v\n", key, val)
 	}
 	return claims,nil
+}
+
+
+func createHash(key string) string {
+	hasher := md5.New()
+	hasher.Write([]byte(key))
+	return hex.EncodeToString(hasher.Sum(nil))
+}
+
+func encrypt(data []byte, passphrase string) []byte {
+	block, _ := aes.NewCipher([]byte(createHash(passphrase)))
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		panic(err.Error())
+	}
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		panic(err.Error())
+	}
+	ciphertext := gcm.Seal(nonce, nonce, data, nil)
+	return ciphertext
+}
+
+func decrypt(data []byte, passphrase string) []byte {
+	key := []byte(createHash(passphrase))
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		panic(err.Error())
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		panic(err.Error())
+	}
+	nonceSize := gcm.NonceSize()
+	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
+	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		panic(err.Error())
+	}
+	return plaintext
 }

@@ -16,7 +16,6 @@ type User struct {
 	loginAttempts int
 	timeLine []*Message
 	topics map[string]int64
-
 }
 
 

@@ -5,6 +5,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"log"
+	"strconv"
 	"testing"
 	"time"
 	. "maestro/api"
@@ -33,8 +34,8 @@ func TestLoginFail(t *testing.T) {
 	ctx1, cancel1 := context.WithTimeout(context.Background(), time.Second)
 	defer cancel1()
 	loginReq := &LoginReq{Device:"devicetofail"}
-	ctx1 = metadata.AppendToOutgoingContext(ctx1, "username", "usernametofail", "password", "passwordtofail")
-	lresp, err := c.Authenticate(
+	ctx1 = metadata.AppendToOutgoingContext(ctx1, "username", "usernametofail", "password", "passwordtofail","app","Test0")
+	_, err = c.Authenticate(
 		ctx1,
 		loginReq,
 	)
@@ -42,10 +43,32 @@ func TestLoginFail(t *testing.T) {
 		t.Errorf("could not authenticate %+v",err)
 		t.Fail()
 	}
+}
 
-	if lresp != nil && lresp.Status != Status_FAIL {
-		t.Errorf("should have Status_Fail %s",lresp.Status)
+func createUser(postfix int, password string) error {
+	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
 	}
+	defer conn.Close()
+	r := NewRegisterClient(conn)
+	ps := strconv.Itoa(postfix)
+
+
+	req := &RegisterReq{UserName: "kalle" + ps,
+		PassWord:  []byte(password),
+		FirstName: "Kalle" + ps,
+		LastName:  "Svensson" + ps,
+		Email:     "kalle" + ps + "@gmail.com",
+		Phone:     "08-12 18 " + ps,
+		Address:   &RegisterReq_Address{Street: "Tomtebogatan " + ps, City: "Stockholm", State: "Sweden", Zip: "113 " + ps},
+		Device:    "device-" + ps,
+		AppName:   "Test" + ps,}
+
+	_ , err = r.Register(context.Background(),req)
+
+	return err
+
 }
 
 func TestLoginSuccess(t *testing.T) {
@@ -55,36 +78,42 @@ func TestLoginSuccess(t *testing.T) {
 		log.Fatalf("did not connect: %v", err)
 	}
 	defer conn.Close()
-	r := NewRegisterClient(conn)
 	c := NewLoginClient(conn)
+
+	postfix := 1000
+	appName := "Test1000"
+	//cfg := createServerConfig(appName)
+	pass := "theRightPassword"
+
+	err = createUser(postfix,pass)
+	if err != nil {
+		t.Errorf("should have Status_Fail %s",err.Error())
+		t.Fail()
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	req := randomUserForTest(1)[0]
-	_ , err = r.Register(ctx,req)
-	if err != nil {
-		t.Errorf("could not register user: %v", req)
-	} else {
-		log.Printf("Registered user %s %s\n",req.FirstName,req.LastName)
-	}
-	ctx1, cancel1 := context.WithTimeout(context.Background(), time.Second)
-	defer cancel1()
-	loginReq := &LoginReq{Device:"devicetofail"}
-	ctx1 = metadata.AppendToOutgoingContext(ctx1, "username",req.UserName, "password", string(req.PassWord))
-	lresp, err := c.Authenticate(
-		ctx1,
+	loginReq := &LoginReq{Device:"device to succeed"}
+	ctx = metadata.AppendToOutgoingContext(ctx, "username","kalle1000" , "password", pass,"app",appName)
+	var header, trailer metadata.MD // variable to store header and trailer
+	_, err =  c.Authenticate(
+		ctx,
 		loginReq,
+		grpc.Header(&header),    // will retrieve header
+		grpc.Trailer(&trailer),  // will retrieve trailer
 	)
+
 	if err != nil {
-		t.Errorf("could not authenticate %+v",err)
+		t.Errorf("could not authenticate %+s",err.Error())
 	} else {
-		md, val := metadata.FromIncomingContext(ctx1)
-		if val {
-			token := md.Get("bearer-bin")
+		token := header.Get("bearer-bin")
+		if len(token) != 0 {
+			token := header.Get("bearer-bin")
 			fmt.Printf("Token := %s", token)
-			if len(token) == 0 || lresp.Status != Status_SUCCESS {
-				t.Fail()
-			}
+			//decodeToken(token[0],cfg.SYSTEM_SECRET)
+		} else {
+			t.Errorf("No token, failing %s",token)
+			t.Fail()
 		}
 	}
 }
@@ -97,36 +126,33 @@ func TestLoginBlock(t *testing.T) {
 		log.Fatalf("did not connect: %v", err)
 	}
 	defer conn.Close()
-	r := NewRegisterClient(conn)
 	c := NewLoginClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	req := randomUserForTest(1)[0]
-	_, err = r.Register(ctx, req)
+	postfix := 1001
+
+	err = createUser(postfix,"theRightPassword")
 	if err != nil {
-		t.Errorf("could not register user: %v", req)
-	} else {
-		log.Printf("Registered user %+v\n", req)
+		t.Errorf("should have Status_Fail %s",err.Error())
+		t.Fail()
 	}
+
+
 
 	for i := 0; i > cfg.MAX_NUMBER_OF_FAILED_LOGIN_ATTEMPT; i++ {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
-		loginReq := &LoginReq{Device: req.Device}
-		ctx = metadata.AppendToOutgoingContext(ctx, "username", req.UserName, "password", "wrongPassword")
-		lresp, err := c.Authenticate(
+		loginReq := &LoginReq{Device: "deviceToFail"}
+		ctx = metadata.AppendToOutgoingContext(ctx, "username", "kalle1001", "password", "wrongpassword","app","Test1001")
+		_, err := c.Authenticate(
 			ctx,
 			loginReq,
 		)
-
-		if err != nil {
-			fmt.Printf("status is: %s", lresp.Status)
+		t.Logf("Error is %s\n",err.Error())
+		if i > cfg.MAX_NUMBER_OF_FAILED_LOGIN_ATTEMPT && err == nil {
 			t.Errorf("could not authenticate %+v", err)
+			t.Fail()
 		}
-		if  i > cfg.MAX_NUMBER_OF_FAILED_LOGIN_ATTEMPT && lresp.Status != Status_BLOCKED {
-			t.Errorf("status shoud be blocked,%s", Status_BLOCKED.String())
-		}
+
 	}
 
 }

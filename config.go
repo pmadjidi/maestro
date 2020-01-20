@@ -24,6 +24,7 @@ type ServerConfig struct {
 	WRITE_LATENCY time.Duration
 	MAX_NUMBER_OF_TOPICS int
 	STORAGEPATH string
+	SYSTEM_PATH string
 }
 
 
@@ -95,7 +96,7 @@ func createServerConfig(name ...string) *ServerConfig {
 
 	RESETDATABASE_ON_START , err := strconv.ParseBool(os.Getenv("RESETDATABASE_ON_START"))
 	if err  != nil  {
-		RESETDATABASE_ON_START = true
+		RESETDATABASE_ON_START = false
 	}
 
 	MAX_NUMBER_OF_MESSAGES_PER_TOPIC, err := strconv.Atoi(os.Getenv("MAX_NUMBER_OF_MESSAGES_PER_TOPIC"))
@@ -131,13 +132,6 @@ func createServerConfig(name ...string) *ServerConfig {
 	}
 
 
-
-
-
-
-
-
-
 	return &ServerConfig{
 		SYSTEM_NAME,
 		APP_NAME,
@@ -156,6 +150,7 @@ func createServerConfig(name ...string) *ServerConfig {
 		WRITE_LATENCY,
 		MAX_NUMBER_OF_TOPICS,
 		STORAGEPATH,
+		SYSTEM_PATH,
 	}
 }
 

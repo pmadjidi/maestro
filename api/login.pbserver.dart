@@ -10,17 +10,18 @@ import 'dart:async' as $async;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'dart:core' as $core;
-import 'login.pb.dart' as $2;
+import 'login.pb.dart' as $4;
+import 'register.pb.dart' as $3;
 import 'login.pbjson.dart';
 
 export 'login.pb.dart';
 
 abstract class LoginServiceBase extends $pb.GeneratedService {
-  $async.Future<$2.LoginResp> authenticate($pb.ServerContext ctx, $2.LoginReq request);
+  $async.Future<$3.Empty> authenticate($pb.ServerContext ctx, $4.LoginReq request);
 
   $pb.GeneratedMessage createRequest($core.String method) {
     switch (method) {
-      case 'Authenticate': return $2.LoginReq();
+      case 'Authenticate': return $4.LoginReq();
       default: throw $core.ArgumentError('Unknown method: $method');
     }
   }

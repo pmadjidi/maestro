@@ -10,17 +10,17 @@ import 'dart:async' as $async;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'dart:core' as $core;
-import 'message.pb.dart' as $4;
+import 'message.pb.dart' as $5;
 import 'message.pbjson.dart';
 
 export 'message.pb.dart';
 
 abstract class MessageServiceBase extends $pb.GeneratedService {
-  $async.Future<$4.MsgReq> msg($pb.ServerContext ctx, $4.MsgReq request);
+  $async.Future<$5.MsgReq> msg($pb.ServerContext ctx, $5.MsgReq request);
 
   $pb.GeneratedMessage createRequest($core.String method) {
     switch (method) {
-      case 'Msg': return $4.MsgReq();
+      case 'Msg': return $5.MsgReq();
       default: throw $core.ArgumentError('Unknown method: $method');
     }
   }

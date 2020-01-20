@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
@@ -9,23 +10,50 @@ import (
 	"time"
 )
 
-func (a *App) issueToken(durationInSeconds int,userName,device,appName string) (string,error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"Issuer": a.cfg.APP_NAME,
-		"Username": userName,
-		"SuperUser": false,
+
+
+func (a *App) issueTokenOld(userName,device string) (string,error) {
+	fmt.Printf("Got %s, %s,%s %s %s \n",a.cfg.SYSTEM_NAME,userName,device,a.cfg.SYSTEM_NAME,a.cfg.APP_NAME)
+	token := map[string]string{
+		"issuer": a.cfg.SYSTEM_NAME,
+		"username": userName,
+		"superuser": "false",
 		"device": device,
-		"VALID": time.Now().Second() +  durationInSeconds, // vaid for a week
-		"AppName": appName,
-	})
-	tokenString, err := token.SignedString([]byte(a.cfg.SYSTEM_SECRET))
+		"stamp": time.Now().String(), // vaid for a week
+		"appname": a.cfg.APP_NAME,
+	}
+	tokenByte,err := json.Marshal(token)
 	if err != nil {
-		fmt.Printf("Error: %v", err)
+		return "", err
+	} else {
+		s :=  string(encrypt(tokenByte,a.cfg.SYSTEM_SECRET))
+		return s,nil
+	}
+}
+
+func (a *App) issueToken(userName,device string) (string,error) {
+	fmt.Printf("Got %s, %s,%s %s %s \n",a.cfg.SYSTEM_NAME,userName,device,a.cfg.SYSTEM_NAME,a.cfg.APP_NAME)
+
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256,jwt.MapClaims{
+		"issuer": a.cfg.SYSTEM_NAME,
+			"username": userName,
+			"superuser": "false",
+			"device": device,
+			"stamp": time.Now().String(), // vaid for a week
+			"appname": a.cfg.APP_NAME,
+	})
+
+	// Sign and get the complete encoded token as a string using the secret
+	tokenString, err := token.SignedString([]byte(a.cfg.SYSTEM_SECRET))
+	fmt.Printf("?? %s",tokenString)
+	if err != nil {
 		return "", err
 	} else {
 		return tokenString,nil
 	}
 }
+
 
 func (a *App) userManager() {
 
@@ -35,16 +63,18 @@ func (a *App) userManager() {
 		case env := <-a.loginQ:
 			status :=  a.tryLogin(*env.username,[]byte(*env.password))
 			if status == Status_SUCCESS {
-				token,err := a.issueToken(7 * 24 * 60 * 60,*env.username,*env.device,a.cfg.APP_NAME)
+				token,err := a.issueToken(*env.username,*env.device)
 				if err != nil {
-					env.resp <- &LoginResp{Status: Status_ERROR}
+					env.Status = Status_ERROR
 				} else {
-					env.token <- &token
-					env.resp <- &LoginResp{Status: Status_SUCCESS}
+					env.token = &token
+					env.Status = Status_SUCCESS
 				}
 			} else {
-				env.resp <- &LoginResp{Status: status}
+				env.Status = status
+				fmt.Printf("In here %s\n",env.Status.String())
 			}
+			env.resp <- notify{}
 		case <-time.After(a.cfg.WRITE_LATENCY * time.Millisecond):
 			//fmt.Printf("loginServer: Looking for changes in user database...\n")
 			for _, aUser := range a.users.db {
@@ -80,7 +110,7 @@ func (a *App) userManager() {
 					newUser := newUser(req)
 					newUser.status.Set(DIRTY)
 					a.users.db[newUser.UserName] = newUser
-					token,err := a.issueToken(7 * 24 * 60 * 60,req.GetUserName(),req.GetDevice(),req.GetAppName())
+					token,err := a.issueToken(req.GetUserName(),req.GetDevice())
 					if err != nil {
 						fmt.Printf("Error %+v",err)
 						env.status = Status_NOAUTH
@@ -91,6 +121,18 @@ func (a *App) userManager() {
 				}
 				env.resp <- struct{}{}
 			}
+
+			case env := <- a.msgSendQ:
+				aUser,ok := a.users.db[env.userName]
+				if !ok {
+					env.Status = Status_INVALID_USERNAME
+				} else {
+					env.Status = Status_SUCCESS
+					env.messages <- aUser.timeLine
+				}
+				env.resp <- notify{}
+
+
 		case <-a.quit:
 			break
 		}
@@ -104,7 +146,7 @@ func (a *App) tryLogin(userName string, pass []byte) Status {
 
 	aUser, userExists := a.users.db[userName]
 	if !userExists {
-		return Status_FAIL
+		return Status_INVALID_USERNAME
 	}
 
 	aUser.Lock()
@@ -123,7 +165,7 @@ func (a *App) tryLogin(userName string, pass []byte) Status {
 			return Status_BLOCKED
 		}
 		fmt.Printf("[%s] Login failed, wrong password %s,%s\n",a.name,userName,pass)
-		return Status_FAIL
+		return Status_NOAUTH
 	}
 	return Status_SUCCESS
 }

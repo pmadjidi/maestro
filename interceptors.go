@@ -25,7 +25,7 @@ func unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServ
 	if !ok {
 		return nil,  errors.New("Missing metadata from incomming request")
 	}
-	if !verifyToken(md["authorization"]) {
+	if !verifyToken(md["bearer-bin"]) {
 		return nil, errors.New("Invalid token")
 	}
 

@@ -18,7 +18,8 @@ type App struct {
 	messages  *messagesdb
 	loginQ    chan *loginEnvelope
 	registerQ chan *registerEnvelope
-	msgQ      chan *msgEnvelope
+	msgSendQ      chan *msgEnvelope
+	msgRecQ      chan *msgEnvelope
 	UserDbQ   chan []*User
 	MsgDBQ    chan []*Message
 	DATABASE  *sql.DB
@@ -36,6 +37,7 @@ func newApp(name string) (*App, error) {
 		make(chan *loginEnvelope, cfg.SERVER_QEUEU_LENGTH),
 		make(chan *registerEnvelope, cfg.SERVER_QEUEU_LENGTH),
 		make(chan *msgEnvelope, cfg.SERVER_QEUEU_LENGTH),
+		make(chan *msgEnvelope, cfg.SERVER_QEUEU_LENGTH),
 		make(chan []*User, cfg.SERVER_QEUEU_LENGTH),
 		make(chan []*Message, cfg.SERVER_QEUEU_LENGTH),
 		newDatabase(cfg),
@@ -45,7 +47,7 @@ func newApp(name string) (*App, error) {
 }
 
 
-func (a *App) start() {
+func (a *App) start() *App {
 	PrettyPrint(a.cfg)
 	a.readUsersFromDatabase()
 	a.readMessagesFromDatabase()
@@ -55,8 +57,7 @@ func (a *App) start() {
 	go a.messageManager()
 	go a.databaseManager()
 
-
-
+	return a
 }
 
 

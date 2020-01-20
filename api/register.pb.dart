@@ -10,7 +10,7 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'google/protobuf/timestamp.pb.dart' as $3;
+import 'google/protobuf/timestamp.pb.dart' as $2;
 
 class RegisterReq_Address extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo('RegisterReq.Address', package: const $pb.PackageName('api'), createEmptyInstance: create)
@@ -83,7 +83,7 @@ class RegisterReq extends $pb.GeneratedMessage {
     ..aOS(6, 'phone')
     ..aOM<RegisterReq_Address>(7, 'address', subBuilder: RegisterReq_Address.create)
     ..aOS(8, 'device')
-    ..aOM<$3.Timestamp>(9, 'timeName', subBuilder: $3.Timestamp.create)
+    ..aOM<$2.Timestamp>(9, 'timeName', subBuilder: $2.Timestamp.create)
     ..aOS(10, 'AppName', protoName: 'AppName')
     ..hasRequiredFields = false
   ;
@@ -178,15 +178,15 @@ class RegisterReq extends $pb.GeneratedMessage {
   void clearDevice() => clearField(8);
 
   @$pb.TagNumber(9)
-  $3.Timestamp get timeName => $_getN(8);
+  $2.Timestamp get timeName => $_getN(8);
   @$pb.TagNumber(9)
-  set timeName($3.Timestamp v) { setField(9, v); }
+  set timeName($2.Timestamp v) { setField(9, v); }
   @$pb.TagNumber(9)
   $core.bool hasTimeName() => $_has(8);
   @$pb.TagNumber(9)
   void clearTimeName() => clearField(9);
   @$pb.TagNumber(9)
-  $3.Timestamp ensureTimeName() => $_ensure(8);
+  $2.Timestamp ensureTimeName() => $_ensure(8);
 
   @$pb.TagNumber(10)
   $core.String get appName => $_getSZ(9);

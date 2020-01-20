@@ -10,7 +10,7 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'status.pbenum.dart' as $0;
+import 'register.pb.dart' as $3;
 
 class LoginReq extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo('LoginReq', package: const $pb.PackageName('api'), createEmptyInstance: create)
@@ -43,54 +43,13 @@ class LoginReq extends $pb.GeneratedMessage {
   void clearDevice() => clearField(1);
 }
 
-class LoginResp extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo('LoginResp', package: const $pb.PackageName('api'), createEmptyInstance: create)
-    ..aOS(1, 'id')
-    ..e<$0.Status>(2, 'status', $pb.PbFieldType.OE, defaultOrMaker: $0.Status.SUCCESS, valueOf: $0.Status.valueOf, enumValues: $0.Status.values)
-    ..hasRequiredFields = false
-  ;
-
-  LoginResp._() : super();
-  factory LoginResp() => create();
-  factory LoginResp.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory LoginResp.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-  LoginResp clone() => LoginResp()..mergeFromMessage(this);
-  LoginResp copyWith(void Function(LoginResp) updates) => super.copyWith((message) => updates(message as LoginResp));
-  $pb.BuilderInfo get info_ => _i;
-  @$core.pragma('dart2js:noInline')
-  static LoginResp create() => LoginResp._();
-  LoginResp createEmptyInstance() => create();
-  static $pb.PbList<LoginResp> createRepeated() => $pb.PbList<LoginResp>();
-  @$core.pragma('dart2js:noInline')
-  static LoginResp getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<LoginResp>(create);
-  static LoginResp _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set id($core.String v) { $_setString(0, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearId() => clearField(1);
-
-  @$pb.TagNumber(2)
-  $0.Status get status => $_getN(1);
-  @$pb.TagNumber(2)
-  set status($0.Status v) { setField(2, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasStatus() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearStatus() => clearField(2);
-}
-
 class LoginApi {
   $pb.RpcClient _client;
   LoginApi(this._client);
 
-  $async.Future<LoginResp> authenticate($pb.ClientContext ctx, LoginReq request) {
-    var emptyResponse = LoginResp();
-    return _client.invoke<LoginResp>(ctx, 'Login', 'Authenticate', request, emptyResponse);
+  $async.Future<$3.Empty> authenticate($pb.ClientContext ctx, LoginReq request) {
+    var emptyResponse = $3.Empty();
+    return _client.invoke<$3.Empty>(ctx, 'Login', 'Authenticate', request, emptyResponse);
   }
 }
 

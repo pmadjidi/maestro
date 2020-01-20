@@ -17,7 +17,7 @@ const (
 func init() {
 	go func() {
 		server := NewServer()
-		server.Start()
+		server.Start(true)
 		fmt.Printf("Exiting....")
 	}()
 }

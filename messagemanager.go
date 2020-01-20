@@ -10,40 +10,45 @@ import (
 func (a *App) messageManager() {
 
 	fmt.Println("messageManager, Entering processing loop...")
+
 	for {
 		select {
-		case env := <-a.msgQ:
-			m := <-env.req
-			_, ok := a.messages.msg[m.Topic]
-			if !ok {
-				if len(a.messages.msg) < a.cfg.MAX_NUMBER_OF_TOPICS {
-					a.messages.msg[m.Topic] = make([]*Message,10)
-				} else {
-					env.Status = Status_MAXIMUN_NUMBER_OF_TOPICS_REACHED
-				}
-			}
-
-			 if env.Status != Status_MAXIMUN_NUMBER_OF_TOPICS_REACHED {
-				if len(a.messages.msg[m.Topic]) < a.cfg.MAX_NUMBER_OF_MESSAGES_PER_TOPIC {
-					msg := newMessage(m)
-					msg.Set(DIRTY)
-					a.messages.msg[m.Topic] = append(a.messages.msg[m.Topic], msg)
-					subscriptions,ok :=  a.messages.subscriptions[msg.Topic]
-					if ok {
-						for _, user := range subscriptions {
-							user.Lock()
-							user.timeLine = append(user.timeLine,msg)
-							user.status.Set(DIRTY)
-							user.Unlock()
-						}
+		case env := <-a.msgRecQ:
+			messages := <-env.messages
+			innerloop:
+			for _,m := range messages {
+				_, ok := a.messages.msg[m.Topic]
+				if !ok {
+					if len(a.messages.msg) < a.cfg.MAX_NUMBER_OF_TOPICS {
+						a.messages.msg[m.Topic] = make([]*Message, 0)
+					} else {
+						env.Status = Status_MAXIMUN_NUMBER_OF_TOPICS_REACHED
+						break innerloop
 					}
-					env.Status = Status_SUCCESS
-				} else {
-					env.Status = Status_MAXIMUN_NUMBER_OF_MESSAGES_PEER_TOPIC_REACHED
+				}
+
+				if env.Status != Status_MAXIMUN_NUMBER_OF_TOPICS_REACHED {
+					if len(a.messages.msg[m.Topic]) < a.cfg.MAX_NUMBER_OF_MESSAGES_PER_TOPIC {
+						m.Set(DIRTY)
+						a.messages.msg[m.Topic] = append(a.messages.msg[m.Topic], m)
+						subscriptions, ok := a.messages.subscriptions[m.Topic]
+						if ok {
+							for _, user := range subscriptions {
+								user.Lock()
+								user.timeLine = append(user.timeLine, m)
+								user.status.Set(DIRTY)
+								user.Unlock()
+							}
+						}
+						env.Status = Status_SUCCESS
+					} else {
+						env.Status = Status_MAXIMUN_NUMBER_OF_MESSAGES_PEER_TOPIC_REACHED
+					}
 				}
 			}
 			//fmt.Printf("messageManager status is %s\n",res.Status.String())
 			env.resp <- struct{}{}
+
 
 
 		case <-time.After(a.cfg.WRITE_LATENCY * time.Millisecond):

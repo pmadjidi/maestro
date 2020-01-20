@@ -134,7 +134,7 @@ func (a *App) readMessagesFromDatabase() {
 	rows, err := a.DATABASE.Query("SELECT mid, topic ,Pic,parentid,status,stamp FROM messages")
 	handleError(err)
 	for rows.Next() {
-		m := newMessage()
+		m := newMessage(&MsgReq{})[0]
 		var  status  int
 		var stamp int64
 		err = rows.Scan(&m.Id,&m.Topic,&m.Pic,&m.ParentId,&status,&stamp)

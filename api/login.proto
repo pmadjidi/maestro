@@ -1,19 +1,13 @@
 syntax = "proto3";
 package api;
 
-import "status.proto";
+import "register.proto";
 
 message LoginReq{
     string device = 1;
 }
 
 
-message LoginResp{
-    string id  = 1;
-    Status status = 2;
-}
-
-
 service Login {
-    rpc Authenticate(LoginReq) returns (LoginResp);
+    rpc Authenticate(LoginReq) returns (Empty);
 } 

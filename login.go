@@ -2,40 +2,42 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	. "maestro/api"
+	"sync"
 )
 
 type loginEnvelope struct {
-	resp     chan *LoginResp
-	token    chan *string
+	resp     chan notify
+	token    *string
 	username *string
 	password *string
 	device   *string
+	Status
 }
 
 func newLoginEnvelope() *loginEnvelope {
-	return &loginEnvelope{make(chan *LoginResp, 1), make(chan *string, 1), nil, nil, nil}
+	return &loginEnvelope{make(chan notify, 1), nil, nil, nil, nil, Status_NEW}
 }
 
 type loginService struct {
-	name  string
-	stats *metrics
+	*sync.RWMutex
+	name   string
+	stats  *metrics
 	system *Server
 }
 
 func newLoginService(s *Server) *loginService {
-	return &loginService{"loginService", newMetrics(),s}
+	return &loginService{&sync.RWMutex{}, "loginService", newMetrics(), s}
 }
 
 func (l *loginService) Name() string {
 	return l.name
 }
 
-func (l *loginService) Authenticate(ctx context.Context, req *LoginReq) (*LoginResp, error) {
+func (l *loginService) Authenticate(ctx context.Context, req *LoginReq) (*Empty, error) {
 
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
@@ -43,12 +45,10 @@ func (l *loginService) Authenticate(ctx context.Context, req *LoginReq) (*LoginR
 	}
 
 	/*
-	if !verifyToken(md["authorization"]) {
-		return nil, errors.New("Invalid token")
-	}
-	 */
-
-
+		if !verifyToken(md["authorization"]) {
+			return nil, errors.New("Invalid token")
+		}
+	*/
 
 	username := md.Get("username")
 	password := md.Get("password")
@@ -59,22 +59,20 @@ func (l *loginService) Authenticate(ctx context.Context, req *LoginReq) (*LoginR
 		return nil, fmt.Errorf(Status_INVALID_APPNAME.String())
 	}
 
-	app,err  := l.system.GetApp(appName[0])
+	app, err := l.system.GetApp(appName[0])
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
-
-
 
 	fmt.Printf("Got Auth request for %s,%s\n", username, password)
 
 	if len(username) == 0 || len(password) == 0 {
 		l.stats.invalidCalls += 1
-		return &LoginResp{Status: Status_FAIL}, nil
+		return &Empty{}, fmt.Errorf(Status_FAIL.String())
 	} else if len(password[0]) < l.system.cfg.MINIMUM_PASSWORD_LENGTH || len(password) > l.system.cfg.NAME_LENGTH_LIMIT {
 		l.stats.invalidCalls += 1
 		fmt.Printf("Inavild Password\n")
-		return &LoginResp{Status: Status_FAIL}, nil
+		return &Empty{}, fmt.Errorf(Status_FAIL.String())
 	}
 
 	env := newLoginEnvelope()
@@ -87,36 +85,48 @@ func (l *loginService) Authenticate(ctx context.Context, req *LoginReq) (*LoginR
 	case <-ctx.Done():
 		err := ctx.Err()
 		fmt.Printf("Authenticate, in error: %+v", err)
+		l.Lock()
 		l.stats.timeouts += 1
-		return &LoginResp{Status: Status_TIMEOUT}, nil
-
+		l.Unlock()
+		return &Empty{}, fmt.Errorf(Status_TIMEOUT.String())
 	}
 
 	select {
 	case <-ctx.Done():
 		err := ctx.Err()
 		fmt.Printf("Authenticate, in error: %+v", err)
+		l.Lock()
 		l.stats.timeouts += 1
-		return &LoginResp{Status: Status_TIMEOUT}, nil
-	case res := <-env.resp:
-		switch res.Status {
+		l.Unlock()
+	case <-env.resp:
+		switch env.Status {
 		case Status_ERROR:
 			fmt.Printf("Password Error\n")
+			l.Lock()
 			l.stats.errors += 1
-			return &LoginResp{Status: Status_ERROR}, errors.New(Status_name[int32(Status_ERROR)])
+			l.Unlock()
 		case Status_NOTFOUND:
 			fmt.Printf("Password Not found \n")
+			l.Lock()
 			l.stats.success += 1
-			return res, nil
+			l.Unlock()
 		case Status_SUCCESS:
+			l.Lock()
 			l.stats.success += 1
-			token := *<-env.token
-			fmt.Printf("token is set to: %s\n", token)
-			grpc.SendHeader(ctx, metadata.New(map[string]string{"bearer-bin": token, "app": appName[0]}))
+			l.Unlock()
+			token := env.token
+			fmt.Printf("\n\n## token is set to: %s\n", *token)
+			header := metadata.Pairs("bearer-bin", *env.token)
+			grpc.SendHeader(ctx, header)
+			//ctx = metadata.AppendToOutgoingContext(ctx, "bearer-bin", *env.token)
+			//err = grpc.SetHeader(ctx, metadata.New(map[string]string{"bearer-bin": *env.token, "app": appName[0]}))
+			//grpc.S
+			//ctx = metadata.NewIncomingContext(ctx,"bearer-bin": token, "app": appName[0])
 			//ctx = metadata.(ctx, "app", l.cfg.APP_NAME, "bearer",env.token)
-			return res, nil
-		default:
-			return res, nil
+			//ctx = metadata.AppendToOutgoingContext(ctx, "bearer-bin", *token)
+			return &Empty{},nil
 		}
 	}
+		return &Empty{}, fmt.Errorf(env.Status.String())
+
 }

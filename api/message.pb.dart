@@ -10,7 +10,7 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'google/protobuf/timestamp.pb.dart' as $3;
+import 'google/protobuf/timestamp.pb.dart' as $2;
 
 import 'status.pbenum.dart' as $0;
 
@@ -21,7 +21,7 @@ class MsgReq extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(3, 'pic', $pb.PbFieldType.OY)
     ..aOS(4, 'parentId', protoName: 'parentId')
     ..aOS(5, 'topic')
-    ..aOM<$3.Timestamp>(6, 'timeName', subBuilder: $3.Timestamp.create)
+    ..aOM<$2.Timestamp>(6, 'timeName', subBuilder: $2.Timestamp.create)
     ..e<$0.Status>(7, 'status', $pb.PbFieldType.OE, defaultOrMaker: $0.Status.SUCCESS, valueOf: $0.Status.valueOf, enumValues: $0.Status.values)
     ..hasRequiredFields = false
   ;
@@ -87,15 +87,15 @@ class MsgReq extends $pb.GeneratedMessage {
   void clearTopic() => clearField(5);
 
   @$pb.TagNumber(6)
-  $3.Timestamp get timeName => $_getN(5);
+  $2.Timestamp get timeName => $_getN(5);
   @$pb.TagNumber(6)
-  set timeName($3.Timestamp v) { setField(6, v); }
+  set timeName($2.Timestamp v) { setField(6, v); }
   @$pb.TagNumber(6)
   $core.bool hasTimeName() => $_has(5);
   @$pb.TagNumber(6)
   void clearTimeName() => clearField(6);
   @$pb.TagNumber(6)
-  $3.Timestamp ensureTimeName() => $_ensure(5);
+  $2.Timestamp ensureTimeName() => $_ensure(5);
 
   @$pb.TagNumber(7)
   $0.Status get status => $_getN(6);

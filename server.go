@@ -3,16 +3,21 @@ package main
 import (
 	"fmt"
 	"google.golang.org/grpc"
+	"io/ioutil"
 	"log"
 	. "maestro/api"
 	"net"
+	"os"
+	"path"
 	"sync"
 )
 
 type Server struct {
+	*Flag
 	grpcs    *grpc.Server
 	apps     map[string]*App
 	services map[string]Service
+	status map[string]*Flag
 	cfg      *ServerConfig
 	sync.RWMutex
 	terminate chan struct{}
@@ -20,9 +25,10 @@ type Server struct {
 
 func NewServer() *Server {
 	cfg := createServerConfig()
-	return &Server{grpc.NewServer(),make(map[string]*App),make(map[string]Service),cfg,
+	return &Server{NewFlag(),grpc.NewServer(),make(map[string]*App),make(map[string]Service),make(map[string]*Flag),cfg,
 		sync.RWMutex{},make(chan struct{})}
 }
+
 
 
 func (s *Server) NewApp(appName string) (*App,error) {
@@ -35,6 +41,8 @@ func (s *Server) NewApp(appName string) (*App,error) {
 			return nil,err
 		}
 		s.apps[appName] = app
+		s.status[appName] = NewFlag()
+		s.status[appName].Set(NEW)
 		app.start()
 		return app,nil
 
@@ -67,20 +75,38 @@ func (s *Server) registerServices() {
 }
 
 func (s *Server) StartApps() {
-	s.Lock()
-	defer s.Unlock()
 
-	for appName, app := range s.apps {
-		fmt.Printf("Starting App[%s]", appName)
-		app.start()
+	files, err := ioutil.ReadDir(s.cfg.SYSTEM_PATH)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, file := range files {
+		appNAME := file.Name()
+		fmt.Printf("Registring app [%s]\n",file.Name())
+		_ , err := s.NewApp(appNAME)
+		if err != nil {
+			fmt.Printf("Could not start app [%s] skipping... \n",appNAME)
+		}
 	}
 }
 
-func (s *Server) Start() {
-
-
+func (s *Server) Start(reset bool) {
 
 	PrettyPrint(s.cfg)
+
+	if reset {
+		fmt.Printf("Reset flag recived, removing all apps from system node....")
+		files, err := ioutil.ReadDir(s.cfg.SYSTEM_PATH)
+		if err != nil {
+			log.Fatal(err)
+		}
+		for _, file := range files {
+			fmt.Printf("Removing app [%s]...\n", file.Name())
+			os.RemoveAll(path.Join([]string{s.cfg.SYSTEM_PATH, file.Name()}...))
+		}
+
+	}
+
 	s.StartApps()
 	s.registerServices()
 
