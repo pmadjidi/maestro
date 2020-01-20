@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
@@ -12,27 +11,9 @@ import (
 
 
 
-func (a *App) issueTokenOld(userName,device string) (string,error) {
-	fmt.Printf("Got %s, %s,%s %s %s \n",a.cfg.SYSTEM_NAME,userName,device,a.cfg.SYSTEM_NAME,a.cfg.APP_NAME)
-	token := map[string]string{
-		"issuer": a.cfg.SYSTEM_NAME,
-		"username": userName,
-		"superuser": "false",
-		"device": device,
-		"stamp": time.Now().String(), // vaid for a week
-		"appname": a.cfg.APP_NAME,
-	}
-	tokenByte,err := json.Marshal(token)
-	if err != nil {
-		return "", err
-	} else {
-		s :=  string(encrypt(tokenByte,a.cfg.SYSTEM_SECRET))
-		return s,nil
-	}
-}
 
 func (a *App) issueToken(userName,device string) (string,error) {
-	fmt.Printf("Got %s, %s,%s %s %s \n",a.cfg.SYSTEM_NAME,userName,device,a.cfg.SYSTEM_NAME,a.cfg.APP_NAME)
+	//fmt.Printf("Got %s, %s,%s %s %s \n",a.cfg.SYSTEM_NAME,userName,device,a.cfg.SYSTEM_NAME,a.cfg.APP_NAME)
 
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,jwt.MapClaims{

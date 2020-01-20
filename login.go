@@ -64,7 +64,7 @@ func (l *loginService) Authenticate(ctx context.Context, req *LoginReq) (*Empty,
 		return nil, err
 	}
 
-	fmt.Printf("Got Auth request for %s,%s\n", username, password)
+	fmt.Printf("Got Auth request for %s\n", username)
 
 	if len(username) == 0 || len(password) == 0 {
 		l.stats.invalidCalls += 1

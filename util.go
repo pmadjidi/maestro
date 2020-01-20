@@ -5,20 +5,21 @@ import (
 	"crypto/cipher"
 	"crypto/md5"
 	"crypto/rand"
+	"crypto/sha1"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"io"
-	"crypto/sha1"
-	"encoding/json"
-	"fmt"
 	"log"
-	"reflect"
-	"strconv"
 	. "maestro/api"
 	mathRand "math/rand"
+	"os"
+	"reflect"
+	"strconv"
 )
 
 
@@ -258,4 +259,14 @@ func decrypt(data []byte, passphrase string) []byte {
 		panic(err.Error())
 	}
 	return plaintext
+}
+
+
+
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }

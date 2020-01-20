@@ -96,6 +96,7 @@ func (r *registerService) Register(ctx context.Context, req *RegisterReq) (*Empt
 
 	if err != nil {
 		app, err = r.system.NewApp(req.GetAppName())
+		app.start()
 		if err != nil {
 			fmt.Printf("Error here...%s",err)
 			return &Empty{}, err

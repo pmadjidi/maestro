@@ -61,3 +61,13 @@ func (a *App) start() *App {
 }
 
 
+func (a *App) stop() *App {
+	PrettyPrint(a.cfg)
+	return a
+}
+
+
+
+
+
+
