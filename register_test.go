@@ -14,7 +14,7 @@ const (
 	address = "localhost:50051"
 )
 
-func init() {
+func ainit() {
 	go func() {
 		server := NewServer()
 		server.Start(true)

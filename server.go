@@ -76,22 +76,29 @@ func (s *Server) registerServices() {
 
 func (s *Server) StartApps() {
 	files, err := ioutil.ReadDir(s.cfg.SYSTEM_PATH)
-	if err != nil {
+	if  err != nil && os.IsNotExist(err) {
+		err := os.MkdirAll(s.cfg.SYSTEM_PATH, os.ModePerm)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else if err != nil  {
 		log.Fatal(err)
 	}
+
 	for _, file := range files {
 		appNAME := file.Name()
 		app, err := s.NewApp(appNAME)
 		if err != nil {
-			fmt.Printf("Could not start app [%s] skipping... \n", appNAME)
+
+			s.log(fmt.Sprintf("Could not start app [%s] skipping", appNAME))
 		} else {
 			exists := fileExists( s.cfg.SYSTEM_PATH+appNAME+"/blocked")
 			if exists {
-				fmt.Printf("%s blocks request to App %s \n", s.cfg.SYSTEM_NAME, appNAME)
+				s.log(fmt.Sprintf("blocks request to App [%s]", appNAME))
 				s.status[appNAME].Set(BLOCKED)
 			} else {
-				fmt.Printf("Registring app [%s]\n", file.Name())
-				fmt.Printf("Starting app [%s]... \n", appNAME)
+				s.log(fmt.Sprintf("Registring app [%s]", file.Name()))
+				s.log(fmt.Sprintf("Starting app [%s]", appNAME))
 				app.start()
 			}
 		}
@@ -102,10 +109,10 @@ func (s *Server) monitor() {
 	for {
 		select {
 		case <-time.After(10 * time.Second):
-			fmt.Printf("Monitor: Tick..\n")
+			s.log("Monitor sys tick ... Zzzz")
 			files, err := ioutil.ReadDir(s.cfg.SYSTEM_PATH)
 			if err != nil {
-				fmt.Printf("monitor error, can not read system directory...\n: %s", err.Error())
+				s.log(fmt.Sprintf("monitor error, can not read system directory [%s]", err.Error()))
 			} else {
 				for _, file := range files {
 					appNAME := file.Name()
@@ -113,17 +120,20 @@ func (s *Server) monitor() {
 					if exists {
 						s.Lock()
 						if !s.status[appNAME].Is(BLOCKED) {
-							fmt.Printf("%s Blocking app %s \n", s.cfg.SYSTEM_NAME, appNAME)
+							s.log(fmt.Sprintf("Hum... Blocking app [%s]", appNAME))
 							s.status[appNAME].Set(BLOCKED)
+							s.apps[appNAME].Stop()
 						}
 						s.Unlock()
 					} else {
 						s.Lock()
 						if s.status[appNAME].Is(BLOCKED) {
-							fmt.Printf("Unblocking app [%s]\n", file.Name())
+							s.log(fmt.Sprintf("Hum... Unblocking app [%s]", appNAME))
 							s.status[appNAME].Clear(BLOCKED)
+							s.apps[appNAME].startSubSystems()
 						}
 						s.Unlock()
+
 					}
 				}
 			}
@@ -158,13 +168,13 @@ func (s *Server) Start(reset bool) {
 	for serviceName, srv := range s.services {
 		switch serviceName {
 		case "loginServices":
-			fmt.Printf("RPC Registring loginService...\n")
+			s.log("RPC Registring loginService")
 			RegisterLoginServer(s.grpcs, srv.(LoginServer))
 		case "registerServices":
-			fmt.Printf("RPC Registring RegisterService...\n")
+			s.log("RPC Registring RegisterService")
 			RegisterRegisterServer(s.grpcs, srv.(RegisterServer))
 		case "messageService":
-			fmt.Printf("RPC Registring MessageService...\n")
+			s.log("RPC Registring MessageService")
 			RegisterMessageServer(s.grpcs, srv.(MessageServer))
 		}
 	}
@@ -175,8 +185,13 @@ func (s *Server) Start(reset bool) {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	fmt.Printf("Listening to port[%s]\n", s.cfg.PORT)
+	s.log(fmt.Sprintf("Listening to port[%s]", s.cfg.PORT))
 	if err := s.grpcs.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
 }
+
+func (s *Server) log(message string) {
+	fmt.Printf("@[%d] - [%s] %s ...\n",time.Now().Second(),s.cfg.SYSTEM_NAME,message)
+}
+

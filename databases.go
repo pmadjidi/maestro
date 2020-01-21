@@ -103,7 +103,7 @@ func newDatabase(cfg *ServerConfig) * sql.DB{
 
 
 func (a *App) readUsersFromDatabase() {
-	fmt.Printf("Cashing user database....\n")
+	a.log("Cashing user database")
 	rows, err := a.DATABASE.Query("SELECT users.uid, users.status,users.UserName,users.Password,users.FirstName," +
 		"users.LastName,users.Email,users.Phone,users.Device, address.Zip,address.Street,address.City,address.State FROM users left  join address using(uid)   ")
 	handleError(err)
@@ -121,16 +121,16 @@ func (a *App) readUsersFromDatabase() {
 			//fmt.Printf("Reading user %+v\n",u)
 			a.users.db[u.UserName] = &u
 		} else {
-			fmt.Printf("User %+v is marked deleted skipping...\n", u)
+			a.log(fmt.Sprintf("User %+v is marked deleted skipping", u))
 		}
 	}
-	fmt.Printf("%d users for %s\n",len(a.users.db),a.cfg.APP_NAME)
+	a.log(fmt.Sprintf("%d users",len(a.users.db)))
 }
 
 
 func (a *App) readMessagesFromDatabase() {
 	var messageCounter int
-	fmt.Printf("Cashing messaging database....\n")
+	a.log("Cashing messaging database")
 	rows, err := a.DATABASE.Query("SELECT mid, topic ,Pic,parentid,status,stamp FROM messages")
 	handleError(err)
 	for rows.Next() {
@@ -141,7 +141,7 @@ func (a *App) readMessagesFromDatabase() {
 		handleError(err)
 		m.Set(uint(status))
 		if !m.Is(DELETED) && m.Topic != ""{
-			fmt.Printf("Reading message %s",m.Id)
+			a.log(fmt.Sprintf("Reading message %s",m.Id))
 			_,ok := a.messages.msg[m.Topic]
 			if !ok {
 				a.messages.msg[m.Topic] = make([]*Message,10)
@@ -149,28 +149,42 @@ func (a *App) readMessagesFromDatabase() {
 			a.messages.msg[m.Topic]= append(a.messages.msg[m.Topic],m)
 			messageCounter++
 		} else {
-			fmt.Printf("User %+v is marked deleted skipping...\n", m.Id)
+			a.log(fmt.Sprintf("User %+v is marked deleted skipping", m.Id))
 		}
 	}
-	fmt.Printf("%d messages for %s\n",messageCounter,a.cfg.APP_NAME)
+	a.log(fmt.Sprintf("%d messages",messageCounter))
 }
 
 
 
 
 func (a *App) databaseManager() {
-	fmt.Println("Database Server, Entering processing loop...")
+	signalUserDbQ := false
+	signalMsgDBQ := false
+	a.log("Database Server, Entering processing loop")
 	for {
 		select {
-		case users := <-a.UserDbQ:
-			a.presistUser(users)
-			case messages := <- a.MsgDBQ:
-			a.presistMessage(messages)
+		case users, ok := <-a.UserDbQ:
+			if ok {
+				a.presistUser(users)
+			} else {
+				signalUserDbQ = true
+			}
+			case messages,ok := <- a.MsgDBQ:
+				 if ok {
+					 a.presistMessage(messages)
+				 } else {
+					 signalMsgDBQ = true
+				 }
 			case  <- a.quit:
 			break
 		default:
+			if signalUserDbQ && signalMsgDBQ {
+				break
+			}
 		}
 	}
+	a.log("Terminating Database Server, Exiting processing loop")
 }
 
 

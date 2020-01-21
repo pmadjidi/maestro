@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	. "maestro/api"
+	"time"
 )
 
 type Service interface {
@@ -49,22 +50,54 @@ func newApp(name string) (*App, error) {
 
 func (a *App) start() *App {
 	PrettyPrint(a.cfg)
+	a.log("Reading from database")
 	a.readUsersFromDatabase()
 	a.readMessagesFromDatabase()
 	//a.readSubscriptionsFromDatabase()
+	a.log("Starting subsystems")
+	a.startSubSystems()
+	return a
+}
 
+func (a *App) startSubSystems() {
 	go a.userManager()
 	go a.messageManager()
 	go a.databaseManager()
+}
 
-	return a
+func (a *App) log(message string) {
+	fmt.Printf("@[%d]-[%s] App: [%s] %s ...\n",time.Now().Second(),a.cfg.SYSTEM_NAME,a.cfg.APP_NAME,message)
 }
 
 
-func (a *App) stop() *App {
-	PrettyPrint(a.cfg)
-	return a
+func (a *App) StopLoginService() {
+	a.log("Stoping user manger")
+	close(a.loginQ)
+	close(a.registerQ)
 }
+
+
+
+func (a *App) StopMessageService() {
+	a.log("Stoping messaging service")
+	close(a.msgRecQ)
+}
+
+func (a *App) StopDatabaseService() {
+	a.log("Stoping Database service")
+	close(a.MsgDBQ)
+	close(a.UserDbQ)
+}
+
+
+
+func (a *App) Stop() {
+	a.log("Stoping")
+	a.StopLoginService()
+	a.StopMessageService()
+	a.StopDatabaseService()
+}
+
 
 
 

@@ -9,59 +9,61 @@ import (
 	"time"
 )
 
-
-
-
-func (a *App) issueToken(userName,device string) (string,error) {
+func (a *App) issueToken(userName, device string) (string, error) {
 	//fmt.Printf("Got %s, %s,%s %s %s \n",a.cfg.SYSTEM_NAME,userName,device,a.cfg.SYSTEM_NAME,a.cfg.APP_NAME)
 
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256,jwt.MapClaims{
-		"issuer": a.cfg.SYSTEM_NAME,
-			"username": userName,
-			"superuser": "false",
-			"device": device,
-			"stamp": time.Now().String(), // vaid for a week
-			"appname": a.cfg.APP_NAME,
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"issuer":    a.cfg.SYSTEM_NAME,
+		"username":  userName,
+		"superuser": "false",
+		"device":    device,
+		"stamp":     time.Now().String(), // vaid for a week
+		"appname":   a.cfg.APP_NAME,
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
 	tokenString, err := token.SignedString([]byte(a.cfg.SYSTEM_SECRET))
-	fmt.Printf("?? %s",tokenString)
+	fmt.Printf("?? %s", tokenString)
 	if err != nil {
 		return "", err
 	} else {
-		return tokenString,nil
+		return tokenString, nil
 	}
 }
 
-
 func (a *App) userManager() {
-
-	fmt.Println("LoginServer, Entering processing loop...")
+	signalLoginQ := false
+	signalRegisterQ := false
+	signalMessageSendQ := false
+	a.log("LoginServer, Entering processing loop")
 	for {
 		select {
-		case env := <-a.loginQ:
-			status :=  a.tryLogin(*env.username,[]byte(*env.password))
-			if status == Status_SUCCESS {
-				token,err := a.issueToken(*env.username,*env.device)
-				if err != nil {
-					env.Status = Status_ERROR
+		case env, ok := <-a.loginQ:
+			if ok {
+				status := a.tryLogin(*env.username, []byte(*env.password))
+				if status == Status_SUCCESS {
+					token, err := a.issueToken(*env.username, *env.device)
+					if err != nil {
+						env.Status = Status_ERROR
+					} else {
+						env.token = &token
+						env.Status = Status_SUCCESS
+					}
 				} else {
-					env.token = &token
-					env.Status = Status_SUCCESS
+					env.Status = status
+					fmt.Printf("In here %s\n", env.Status.String())
 				}
+				env.resp <- notify{}
 			} else {
-				env.Status = status
-				fmt.Printf("In here %s\n",env.Status.String())
+				signalLoginQ = true
 			}
-			env.resp <- notify{}
+
 		case <-time.After(a.cfg.WRITE_LATENCY * time.Millisecond):
 			//fmt.Printf("loginServer: Looking for changes in user database...\n")
 			for _, aUser := range a.users.db {
 				aUser.Lock()
 				if aUser.status.Is(DIRTY) == true {
-					a.users.dirty = append(a.users.dirty,aUser)
+					a.users.dirty = append(a.users.dirty, aUser)
 					a.users.dirtyCounter += 1
 					aUser.status.Clear(DIRTY)
 				}
@@ -78,33 +80,38 @@ func (a *App) userManager() {
 				}
 			}
 
-		case env := <-a.registerQ:
-			if len(a.users.db) > a.cfg.MAX_NUMBER_OF_USERS {
-				env.status = Status_MAXIMUN_NUMBER_OF_USERS_REACHED
-			} else {
-				req := <-env.req
-				_, exists := a.users.db[req.UserName]
-				if exists {
-					fmt.Printf("User %+v exists\n", req)
-					env.status = Status_EXITSTS
+		case env, ok := <-a.registerQ:
+			if ok {
+				if len(a.users.db) > a.cfg.MAX_NUMBER_OF_USERS {
+					env.status = Status_MAXIMUN_NUMBER_OF_USERS_REACHED
 				} else {
-					newUser := newUser(req)
-					newUser.status.Set(DIRTY)
-					a.users.db[newUser.UserName] = newUser
-					token,err := a.issueToken(req.GetUserName(),req.GetDevice())
-					if err != nil {
-						fmt.Printf("Error %+v",err)
-						env.status = Status_NOAUTH
+					req := <-env.req
+					_, exists := a.users.db[req.UserName]
+					if exists {
+						fmt.Printf("User %+v exists\n", req)
+						env.status = Status_EXITSTS
 					} else {
-						env.token = &token
-						env.status = Status_SUCCESS
+						newUser := newUser(req)
+						newUser.status.Set(DIRTY)
+						a.users.db[newUser.UserName] = newUser
+						token, err := a.issueToken(req.GetUserName(), req.GetDevice())
+						if err != nil {
+							fmt.Printf("Error %+v", err)
+							env.status = Status_NOAUTH
+						} else {
+							env.token = &token
+							env.status = Status_SUCCESS
+						}
 					}
+					env.resp <- struct{}{}
 				}
-				env.resp <- struct{}{}
+			} else {
+				signalRegisterQ = true
 			}
 
-			case env := <- a.msgSendQ:
-				aUser,ok := a.users.db[env.userName]
+		case env, ok := <-a.msgSendQ:
+			if ok {
+				aUser, ok := a.users.db[env.userName]
 				if !ok {
 					env.Status = Status_INVALID_USERNAME
 				} else {
@@ -112,15 +119,22 @@ func (a *App) userManager() {
 					env.messages <- aUser.timeLine
 				}
 				env.resp <- notify{}
+			} else {
+				signalMessageSendQ = true
+			}
 
 
 		case <-a.quit:
 			break
+
+
+		default:
+			if signalLoginQ && signalRegisterQ && signalMessageSendQ {
+				break
+			}
 		}
-
 	}
-
-	fmt.Println("LoginServer, Exit processing loop...")
+	a.log("LoginServer, Exit processing loop")
 }
 
 func (a *App) tryLogin(userName string, pass []byte) Status {
@@ -137,15 +151,15 @@ func (a *App) tryLogin(userName string, pass []byte) Status {
 		return Status_BLOCKED
 	}
 
-	if bcrypt.CompareHashAndPassword(aUser.PassWord,pass) != nil  {
+	if bcrypt.CompareHashAndPassword(aUser.PassWord, pass) != nil {
 		aUser.loginAttempts += 1
-		if aUser.loginAttempts >= a.cfg.MAX_NUMBER_OF_FAILED_LOGIN_ATTEMPT - 1 {
-			fmt.Printf("Blocking user %s\n",userName)
+		if aUser.loginAttempts >= a.cfg.MAX_NUMBER_OF_FAILED_LOGIN_ATTEMPT-1 {
+			fmt.Printf("Blocking user %s\n", userName)
 			aUser.status.Set(BLOCKED)
 			aUser.status.Set(DIRTY)
 			return Status_BLOCKED
 		}
-		fmt.Printf("[%s] Login failed, wrong password %s,%s\n",a.name,userName,pass)
+		fmt.Printf("[%s] Login failed, wrong password %s,%s\n", a.name, userName, pass)
 		return Status_NOAUTH
 	}
 	return Status_SUCCESS
@@ -154,7 +168,7 @@ func (a *App) tryLogin(userName string, pass []byte) Status {
 func (a *App) presistUser(users []*User) {
 	tx, err := a.DATABASE.Begin()
 	handleError(err)
-	for i := 0 ; i <  len(users) ; i++ {
+	for i := 0; i < len(users); i++ {
 		u := users[i]
 		u.RLock()
 		_, err := tx.Exec("INSERT OR REPLACE INTO users (uid, status,UserName,Password,FirstName,LastName,Email, Phone,Device) VALUES (?, ?,?,?,?,?,?,?,?)",
@@ -176,11 +190,9 @@ func (a *App) presistUser(users []*User) {
 	}
 	handleError(tx.Commit())
 	/*
-	for _, u := range users {
-		fmt.Printf("Presisted user[%s]\n", u.UserName)
-	}
-	 */
-	fmt.Printf("[%s] Pressised %d Users in batch....\n",a.name,len(users))
+		for _, u := range users {
+			fmt.Printf("Presisted user[%s]\n", u.UserName)
+		}
+	*/
+	a.log(fmt.Sprintf("[%s] Pressised %d Users in batch", a.name, len(users)))
 }
-
-
