@@ -43,7 +43,6 @@ func newApp(name string) (*App, error) {
 		make(chan []*Message, cfg.SERVER_QEUEU_LENGTH),
 		newDatabase(cfg),
 	}
-	app.readUsersFromDatabase()
 	return &app,nil
 }
 
@@ -66,36 +65,37 @@ func (a *App) startSubSystems() {
 }
 
 func (a *App) log(message string) {
-	fmt.Printf("@[%d]-[%s] App: [%s] %s ...\n",time.Now().Second(),a.cfg.SYSTEM_NAME,a.cfg.APP_NAME,message)
+	fmt.Printf("@[%d]---[%s]App: [%s] %s ...\n",time.Now().Second(),a.cfg.SYSTEM_NAME,a.cfg.APP_NAME,message)
 }
 
 
 func (a *App) StopLoginService() {
-	a.log("Stoping user manger")
 	close(a.loginQ)
 	close(a.registerQ)
+	close(a.msgSendQ)
+	a.log("Stoping user manger")
 }
 
 
 
 func (a *App) StopMessageService() {
-	a.log("Stoping messaging service")
 	close(a.msgRecQ)
+	a.log("Stoping messaging service")
 }
 
 func (a *App) StopDatabaseService() {
-	a.log("Stoping Database service")
 	close(a.MsgDBQ)
 	close(a.UserDbQ)
+	a.log("Stoping Database service")
 }
 
 
 
 func (a *App) Stop() {
-	a.log("Stoping")
 	a.StopLoginService()
 	a.StopMessageService()
 	a.StopDatabaseService()
+	a.log("Stoping")
 }
 
 

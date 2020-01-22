@@ -75,7 +75,6 @@ func newDatabase(cfg *ServerConfig) * sql.DB{
 		"stamp NUMERIC)"
 
 
-	fmt.Printf("Storage path is set to [%s]",cfg.STORAGEPATH)
 	dbPath := cfg.STORAGEPATH + "db/"
 	err := os.MkdirAll(dbPath, os.ModePerm)
 	handleError(err)
@@ -162,6 +161,7 @@ func (a *App) databaseManager() {
 	signalUserDbQ := false
 	signalMsgDBQ := false
 	a.log("Database Server, Entering processing loop")
+	loop:
 	for {
 		select {
 		case users, ok := <-a.UserDbQ:
@@ -175,16 +175,15 @@ func (a *App) databaseManager() {
 					 a.presistMessage(messages)
 				 } else {
 					 signalMsgDBQ = true
+					 if signalUserDbQ && signalMsgDBQ {
+						 break loop
+					 }
 				 }
 			case  <- a.quit:
-			break
-		default:
-			if signalUserDbQ && signalMsgDBQ {
-				break
-			}
+			break loop
 		}
 	}
-	a.log("Terminating Database Server, Exiting processing loop")
+	a.log("Exiting databaseManager")
 }
 
 

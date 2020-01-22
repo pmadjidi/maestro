@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"path"
+	"sort"
 	"sync"
 	"time"
 )
@@ -76,12 +77,12 @@ func (s *Server) registerServices() {
 
 func (s *Server) StartApps() {
 	files, err := ioutil.ReadDir(s.cfg.SYSTEM_PATH)
-	if  err != nil && os.IsNotExist(err) {
+	if err != nil && os.IsNotExist(err) {
 		err := os.MkdirAll(s.cfg.SYSTEM_PATH, os.ModePerm)
 		if err != nil {
 			log.Fatal(err)
 		}
-	} else if err != nil  {
+	} else if err != nil {
 		log.Fatal(err)
 	}
 
@@ -92,7 +93,7 @@ func (s *Server) StartApps() {
 
 			s.log(fmt.Sprintf("Could not start app [%s] skipping", appNAME))
 		} else {
-			exists := fileExists( s.cfg.SYSTEM_PATH+appNAME+"/blocked")
+			exists := fileExists(s.cfg.SYSTEM_PATH + appNAME + "/blocked")
 			if exists {
 				s.log(fmt.Sprintf("blocks request to App [%s]", appNAME))
 				s.status[appNAME].Set(BLOCKED)
@@ -105,18 +106,24 @@ func (s *Server) StartApps() {
 	}
 }
 
-func (s *Server) monitor() {
+func (s *Server) getNumberOfApps() int {
+	s.RLock()
+	defer s.RUnlock()
+	return len(s.apps)
+}
+/*
+func (s *Server) monitorold() {
 	for {
 		select {
 		case <-time.After(10 * time.Second):
-			s.log("Monitor sys tick ... Zzzz")
+			s.log(fmt.Sprintf("Monitoring [%d] Apps tick ... Zzzz", len(s.apps)))
 			files, err := ioutil.ReadDir(s.cfg.SYSTEM_PATH)
 			if err != nil {
 				s.log(fmt.Sprintf("monitor error, can not read system directory [%s]", err.Error()))
 			} else {
 				for _, file := range files {
 					appNAME := file.Name()
-					exists := fileExists(s.cfg.SYSTEM_PATH+appNAME+"/blocked")
+					exists := fileExists(s.cfg.SYSTEM_PATH + appNAME + "/blocked")
 					if exists {
 						s.Lock()
 						if !s.status[appNAME].Is(BLOCKED) {
@@ -136,6 +143,49 @@ func (s *Server) monitor() {
 
 					}
 				}
+			}
+		}
+	}
+}
+
+ */
+
+func (s *Server) monitor() {
+	var blockedAppNames []string
+	for {
+		blockedAppNames = nil
+		select {
+		case <-time.After(10 * time.Second):
+			s.log(fmt.Sprintf("Monitoring [%d] Apps tick ... Zzzz", len(s.apps)))
+			files, err := ioutil.ReadDir(s.cfg.SYSTEM_PATH)
+			if err != nil {
+				s.log(fmt.Sprintf("monitor error, can not read system directory [%s]", err.Error()))
+			} else {
+				for _, file := range files {
+					appNAME := file.Name()
+					exists := fileExists(s.cfg.SYSTEM_PATH + appNAME + "/blocked")
+					if exists {
+						blockedAppNames = append(blockedAppNames, appNAME)
+					}
+				}
+				sort.Strings(blockedAppNames)
+				s.Lock()
+				for _, app := range s.apps {
+					if contains(blockedAppNames, app.name) {
+						if !s.status[app.name].Is(BLOCKED) {
+							s.log(fmt.Sprintf("Hum... Blocking app [%s]", app.name))
+							s.status[app.name].Set(BLOCKED)
+							s.apps[app.name].Stop()
+						}
+					} else {
+						if s.status[app.name].Is(BLOCKED) {
+							s.log(fmt.Sprintf("Hum... Unblocking app [%s]", app.name))
+							s.status[app.name].Clear(BLOCKED)
+							s.apps[app.name].startSubSystems()
+						}
+					}
+				}
+				s.Unlock()
 			}
 		}
 	}
@@ -192,6 +242,5 @@ func (s *Server) Start(reset bool) {
 }
 
 func (s *Server) log(message string) {
-	fmt.Printf("@[%d] - [%s] %s ...\n",time.Now().Second(),s.cfg.SYSTEM_NAME,message)
+	fmt.Printf("@[%d][%s] %s ...\n", time.Now().Second(), s.cfg.SYSTEM_NAME, message)
 }
-

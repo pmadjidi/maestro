@@ -32,10 +32,12 @@ func (a *App) issueToken(userName, device string) (string, error) {
 }
 
 func (a *App) userManager() {
+	a.log("LoginServer, Entering processing loop")
 	signalLoginQ := false
 	signalRegisterQ := false
-	signalMessageSendQ := false
-	a.log("LoginServer, Entering processing loop")
+	signalMegSendQ := false
+
+loop:
 	for {
 		select {
 		case env, ok := <-a.loginQ:
@@ -120,21 +122,20 @@ func (a *App) userManager() {
 				}
 				env.resp <- notify{}
 			} else {
-				signalMessageSendQ = true
+				signalMegSendQ = true
+				if signalLoginQ && signalRegisterQ && signalMegSendQ {
+					break loop
+				}
 			}
-
 
 		case <-a.quit:
-			break
+			break loop
 
-
-		default:
-			if signalLoginQ && signalRegisterQ && signalMessageSendQ {
-				break
-			}
 		}
 	}
-	a.log("LoginServer, Exit processing loop")
+
+	a.log("Exiting user Manager")
+
 }
 
 func (a *App) tryLogin(userName string, pass []byte) Status {
@@ -154,12 +155,12 @@ func (a *App) tryLogin(userName string, pass []byte) Status {
 	if bcrypt.CompareHashAndPassword(aUser.PassWord, pass) != nil {
 		aUser.loginAttempts += 1
 		if aUser.loginAttempts >= a.cfg.MAX_NUMBER_OF_FAILED_LOGIN_ATTEMPT-1 {
-			fmt.Printf("Blocking user %s\n", userName)
+			a.log(fmt.Sprintf("Blocking user [%s]", userName))
 			aUser.status.Set(BLOCKED)
 			aUser.status.Set(DIRTY)
 			return Status_BLOCKED
 		}
-		fmt.Printf("[%s] Login failed, wrong password %s,%s\n", a.name, userName, pass)
+		a.log(fmt.Sprintf("Login failed, wrong password [%s]", userName))
 		return Status_NOAUTH
 	}
 	return Status_SUCCESS

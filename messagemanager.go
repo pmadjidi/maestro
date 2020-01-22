@@ -9,6 +9,7 @@ import (
 func (a *App) messageManager() {
 	signalmsgReQ := false
 	a.log("messageManager, Entering processing loop")
+	loop:
 	for {
 		select {
 		case env, ok := <-a.msgRecQ:
@@ -49,6 +50,9 @@ func (a *App) messageManager() {
 				env.resp <- struct{}{}
 			} else {
 				signalmsgReQ = true
+				if signalmsgReQ {
+					break loop
+				}
 			}
 
 
@@ -79,15 +83,10 @@ func (a *App) messageManager() {
 
 
 		case <-a.quit:
-			break
-		default:
-			if signalmsgReQ {
-				break
-			}
+			break loop
 		}
-
 	}
-	a.log("Message manager exiting loop")
+	a.log("Exiting messageManger")
 }
 
 func (a *App) presistMessage(messages []*Message) {

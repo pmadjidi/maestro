@@ -114,8 +114,8 @@ func (l *loginService) Authenticate(ctx context.Context, req *LoginReq) (*Empty,
 			l.Lock()
 			l.stats.success += 1
 			l.Unlock()
-			token := env.token
-			fmt.Printf("\n\n## token is set to: %s\n", *token)
+			//token := env.token
+			//fmt.Printf("\n\n## token is set to: %s\n", *token)
 			header := metadata.Pairs("bearer-bin", *env.token)
 			grpc.SendHeader(ctx, header)
 			//ctx = metadata.AppendToOutgoingContext(ctx, "bearer-bin", *env.token)

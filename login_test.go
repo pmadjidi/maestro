@@ -79,6 +79,7 @@ func TestLoginSuccess(t *testing.T) {
 	defer conn.Close()
 	c := NewLoginClient(conn)
 
+	postfix64 := rand.
 	postfix := 1000
 	appName := "Test1000"
 	//cfg := createServerConfig(appName)
