@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	. "maestro/api"
 	"sync"
@@ -134,7 +135,8 @@ func (r *registerService) Register(ctx context.Context, req *RegisterReq) (*Empt
 			r.Lock()
 			r.stats.success += 1
 			r.Unlock()
-			ctx = metadata.AppendToOutgoingContext(ctx, "app",app.cfg.APP_NAME, "bearer-bin",*env.token)
+			header := metadata.Pairs("bearer-bin", *env.token,"app",app.cfg.APP_NAME,)
+			grpc.SendHeader(ctx, header)
 			return &Empty{},nil
 		default:
 			return &Empty{},nil

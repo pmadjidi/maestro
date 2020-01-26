@@ -15,8 +15,6 @@ message MsgReq{
 }
 
 
-
-
 service Message {
     rpc Msg(stream MsgReq) returns (stream MsgReq);
 }

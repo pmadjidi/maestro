@@ -268,7 +268,11 @@ func fileExists(filename string) bool {
 	if os.IsNotExist(err) {
 		return false
 	}
-	return !info.IsDir()
+	if err == nil {
+		return !info.Mode().IsDir()
+	} else {
+		return false
+	}
 }
 
 func contains(s []string, e string) bool {
@@ -278,4 +282,8 @@ func contains(s []string, e string) bool {
 		}
 	}
 	return false
+}
+
+func rangeRand(min,max int) int {
+	return mathRand.Intn(max - min) + min
 }

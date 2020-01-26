@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/metadata"
 	"io"
@@ -73,20 +74,15 @@ func newMsgService(s *Server) *msgService {
 func (m *msgService) Msg(srv Message_MsgServer) error {
 	//	log.Println("start new server")
 
-	var token, appName []string
+	var  appName []string
 	ctx := srv.Context()
 
 	md, val := metadata.FromIncomingContext(ctx)
 	if val {
-		token = md.Get("bearer-bin")
 		appName = md.Get("app")
-		fmt.Printf("Token := %s", token)
-		if len(token) == 0 {
-			return fmt.Errorf(Status_NOAUTH.String())
-		}
 	}
 
-	if len(appName) != 0 && appName[0] != "" {
+	if len(appName) != 0 || appName[0] != "" {
 		return fmt.Errorf(Status_INVALID_APPNAME.String())
 	}
 
@@ -103,8 +99,20 @@ func (m *msgService) Msg(srv Message_MsgServer) error {
 
 	go func() {
 		defer wg.Done()
+		msg := MsgReq{
+			Id: uuid.New().String(),
+			Text: "Hello",
+			Pic: []byte{},
+			ParentId: uuid.New().String(),
+			Topic: "Test Topic",
+			TimeName: &timestamp.Timestamp{Seconds: int64(time.Now().Second())} ,
+			Status: Status_SUCCESS}
 
-
+		err := srv.Send(&msg)
+		if err != nil {
+			PrettyPrint(err)
+		}
+		return
 	}()
 
 	loop:

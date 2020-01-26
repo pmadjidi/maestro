@@ -23,7 +23,6 @@ func (a *App) issueToken(userName, device string) (string, error) {
 
 	// Sign and get the complete encoded token as a string using the secret
 	tokenString, err := token.SignedString([]byte(a.cfg.SYSTEM_SECRET))
-	fmt.Printf("?? %s", tokenString)
 	if err != nil {
 		return "", err
 	} else {
@@ -105,7 +104,7 @@ loop:
 							env.status = Status_SUCCESS
 						}
 					}
-					env.resp <- struct{}{}
+					env.resp <- notify{}
 				}
 			} else {
 				signalRegisterQ = true

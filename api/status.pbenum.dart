@@ -34,6 +34,7 @@ class Status extends $pb.ProtobufEnum {
   static const Status MAXIMUN_NUMBER_OF_MESSAGES_PEER_TOPIC_REACHED = Status._(21, 'MAXIMUN_NUMBER_OF_MESSAGES_PEER_TOPIC_REACHED');
   static const Status NEW = Status._(22, 'NEW');
   static const Status INVALID_APPNAME = Status._(23, 'INVALID_APPNAME');
+  static const Status INVALID_TOKEN = Status._(24, 'INVALID_TOKEN');
 
   static const $core.List<Status> values = <Status> [
     SUCCESS,
@@ -60,6 +61,7 @@ class Status extends $pb.ProtobufEnum {
     MAXIMUN_NUMBER_OF_MESSAGES_PEER_TOPIC_REACHED,
     NEW,
     INVALID_APPNAME,
+    INVALID_TOKEN,
   ];
 
   static final $core.Map<$core.int, Status> _byValue = $pb.ProtobufEnum.initByValue(values);

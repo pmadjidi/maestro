@@ -45,7 +45,7 @@ func TestLoginFail(t *testing.T) {
 	}
 }
 
-func createUser(postfix int, password string) error {
+func createUser(postfix int, password string) (string,string,error) {
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
@@ -64,9 +64,19 @@ func createUser(postfix int, password string) error {
 		Device:    "device-" + ps,
 		AppName:   "Test" + ps,}
 
-	_, err = r.Register(context.Background(), req)
+	var header, trailer metadata.MD
+	_, err = r.Register(
+		context.Background(),
+		req,
+		grpc.Header(&header),
+		grpc.Trailer(&trailer),  )
+	if err != nil {
+		token := header.Get("bearer-bin")[0]
+		app := header.Get("app")[0]
+		return token,app,nil
+	}
 
-	return err
+	return "","",err
 
 }
 
@@ -79,13 +89,15 @@ func TestLoginSuccess(t *testing.T) {
 	defer conn.Close()
 	c := NewLoginClient(conn)
 
-	postfix64 := rand.
-	postfix := 1000
-	appName := "Test1000"
+	randomNumber := rangeRand(1000,10000)
+	postfix :=  strconv.Itoa(randomNumber)
+	t.Log(postfix)
+	appName := "Test" + postfix
+	userName := "kalle" + postfix
 	//cfg := createServerConfig(appName)
 	pass := "theRightPassword"
 
-	err = createUser(postfix, pass)
+	_,_,err = createUser(randomNumber, pass)
 	if err != nil {
 		t.Errorf("should have Status_Fail %s", err.Error())
 		t.Fail()
@@ -94,7 +106,7 @@ func TestLoginSuccess(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	loginReq := &LoginReq{Device: "device to succeed"}
-	ctx = metadata.AppendToOutgoingContext(ctx, "username", "kalle1000", "password", pass, "app", appName)
+	ctx = metadata.AppendToOutgoingContext(ctx, "username", userName, "password", pass, "app", appName)
 	var header, trailer metadata.MD // variable to store header and trailer
 	_, err = c.Authenticate(
 		ctx,
@@ -130,7 +142,7 @@ func TestLoginBlock(t *testing.T) {
 
 	postfix := 1001
 
-	err = createUser(postfix, "theRightPassword")
+	_,_,err = createUser(postfix, "theRightPassword")
 	if err != nil {
 		t.Errorf("should have Status_Fail %s", err.Error())
 		t.Fail()

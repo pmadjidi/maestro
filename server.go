@@ -27,7 +27,8 @@ type Server struct {
 
 func NewServer() *Server {
 	cfg := createServerConfig()
-	return &Server{NewFlag(), grpc.NewServer(), make(map[string]*App), make(map[string]Service), make(map[string]*Flag), cfg,
+
+	return &Server{NewFlag(), grpc.NewServer(grpc.UnaryInterceptor(AuthInterceptor)), make(map[string]*App), make(map[string]Service), make(map[string]*Flag), cfg,
 		sync.RWMutex{}, make(chan struct{})}
 }
 
@@ -75,6 +76,7 @@ func (s *Server) registerServices() {
 	s.services["messageService"] = ms
 }
 
+/*
 func (s *Server) StartApps() {
 	files, err := ioutil.ReadDir(s.cfg.SYSTEM_PATH)
 	if err != nil && os.IsNotExist(err) {
@@ -90,7 +92,6 @@ func (s *Server) StartApps() {
 		appNAME := file.Name()
 		app, err := s.NewApp(appNAME)
 		if err != nil {
-
 			s.log(fmt.Sprintf("Could not start app [%s] skipping", appNAME))
 		} else {
 			exists := fileExists(s.cfg.SYSTEM_PATH + appNAME + "/blocked")
@@ -106,49 +107,13 @@ func (s *Server) StartApps() {
 	}
 }
 
+ */
+
 func (s *Server) getNumberOfApps() int {
 	s.RLock()
 	defer s.RUnlock()
 	return len(s.apps)
 }
-/*
-func (s *Server) monitorold() {
-	for {
-		select {
-		case <-time.After(10 * time.Second):
-			s.log(fmt.Sprintf("Monitoring [%d] Apps tick ... Zzzz", len(s.apps)))
-			files, err := ioutil.ReadDir(s.cfg.SYSTEM_PATH)
-			if err != nil {
-				s.log(fmt.Sprintf("monitor error, can not read system directory [%s]", err.Error()))
-			} else {
-				for _, file := range files {
-					appNAME := file.Name()
-					exists := fileExists(s.cfg.SYSTEM_PATH + appNAME + "/blocked")
-					if exists {
-						s.Lock()
-						if !s.status[appNAME].Is(BLOCKED) {
-							s.log(fmt.Sprintf("Hum... Blocking app [%s]", appNAME))
-							s.status[appNAME].Set(BLOCKED)
-							s.apps[appNAME].Stop()
-						}
-						s.Unlock()
-					} else {
-						s.Lock()
-						if s.status[appNAME].Is(BLOCKED) {
-							s.log(fmt.Sprintf("Hum... Unblocking app [%s]", appNAME))
-							s.status[appNAME].Clear(BLOCKED)
-							s.apps[appNAME].startSubSystems()
-						}
-						s.Unlock()
-
-					}
-				}
-			}
-		}
-	}
-}
-
- */
 
 func (s *Server) monitor() {
 	var blockedAppNames []string
@@ -163,8 +128,7 @@ func (s *Server) monitor() {
 			} else {
 				for _, file := range files {
 					appNAME := file.Name()
-					exists := fileExists(s.cfg.SYSTEM_PATH + appNAME + "/blocked")
-					if exists {
+					if fileExists(s.cfg.SYSTEM_PATH + appNAME + "/blocked") {
 						blockedAppNames = append(blockedAppNames, appNAME)
 					}
 				}
@@ -186,6 +150,19 @@ func (s *Server) monitor() {
 					}
 				}
 				s.Unlock()
+				for _, possibleNewAppName := range files {
+					s.RLock()
+					_,ok := s.apps[possibleNewAppName.Name()]
+					s.RUnlock()
+					if !ok {
+						app, err := s.NewApp(possibleNewAppName.Name())
+						if err != nil {
+							s.log(fmt.Sprintf("Could not start app [%s] skipping", possibleNewAppName.Name()))
+						} else {
+							app.start()
+						}
+					}
+				}
 			}
 		}
 	}
@@ -194,7 +171,12 @@ func (s *Server) monitor() {
 func (s *Server) removeAllApps() {
 	fmt.Printf("Reset flag recived, removing all apps from system node....")
 	files, err := ioutil.ReadDir(s.cfg.SYSTEM_PATH)
-	if err != nil {
+	if err != nil && os.IsNotExist(err) {
+		err := os.MkdirAll(s.cfg.SYSTEM_PATH, os.ModePerm)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else if err != nil {
 		log.Fatal(err)
 	}
 	for _, file := range files {
@@ -212,7 +194,7 @@ func (s *Server) Start(reset bool) {
 		s.removeAllApps()
 	}
 
-	s.StartApps()
+	go s.monitor()
 	s.registerServices()
 
 	for serviceName, srv := range s.services {
@@ -229,7 +211,7 @@ func (s *Server) Start(reset bool) {
 		}
 	}
 
-	go s.monitor()
+
 
 	lis, err := net.Listen("tcp", s.cfg.PORT)
 	if err != nil {

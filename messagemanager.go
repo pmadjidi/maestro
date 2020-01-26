@@ -47,7 +47,7 @@ func (a *App) messageManager() {
 					}
 				}
 				//fmt.Printf("messageManager status is %s\n",res.Status.String())
-				env.resp <- struct{}{}
+				env.resp <- notify{}
 			} else {
 				signalmsgReQ = true
 				if signalmsgReQ {
