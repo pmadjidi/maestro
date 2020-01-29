@@ -14,7 +14,7 @@ type Service interface {
 type App struct {
 	name     string
 	quit      chan bool
-	cfg       *ServerConfig
+	cfg       *AppConfig
 	users     *usersdb
 	messages  *messagesdb
 	loginQ    chan *loginEnvelope
@@ -26,13 +26,13 @@ type App struct {
 	DATABASE  *sql.DB
 }
 
-func newApp(name string) (*App, error) {
+func newApp(cfg *ServerConfig,name string) (*App, error) {
 	if name == ""  {
 		return nil, fmt.Errorf(Status_INVALID_APPNAME.String())
 	}
 
-	cfg := createServerConfig(name)
-	app := App{name,make(chan bool), cfg,
+	appCfg := createAppConfig(cfg,name)
+	app := App{name,make(chan bool), appCfg,
 		newUserdb(cfg.ARRAY_PRE_ALLOCATION_LIMIT),
 		newMessageDb(),
 		make(chan *loginEnvelope, cfg.SERVER_QEUEU_LENGTH),
@@ -41,7 +41,7 @@ func newApp(name string) (*App, error) {
 		make(chan *msgEnvelope, cfg.SERVER_QEUEU_LENGTH),
 		make(chan []*User, cfg.SERVER_QEUEU_LENGTH),
 		make(chan []*Message, cfg.SERVER_QEUEU_LENGTH),
-		newDatabase(cfg),
+		newDatabase(appCfg),
 	}
 	return &app,nil
 }

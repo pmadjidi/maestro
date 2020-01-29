@@ -78,15 +78,18 @@ func (m *msgService) Msg(srv Message_MsgServer) error {
 	ctx := srv.Context()
 
 	md, val := metadata.FromIncomingContext(ctx)
+	PrettyPrint(md)
 	if val {
 		appName = md.Get("app")
+		PrettyPrint(appName)
+		if len(appName) < 1 && appName[0] != "" {
+			return fmt.Errorf(Status_INVALID_APPNAME.String())
+		}
+	} else {
+		return fmt.Errorf(Status_NOAUTH.String())
 	}
 
-	if len(appName) != 0 || appName[0] != "" {
-		return fmt.Errorf(Status_INVALID_APPNAME.String())
-	}
-
-	app, err := m.system.GetApp(appName[0])
+	app, err := m.system.GetOrCreateApp(appName[0],false)
 	if err != nil {
 		return err
 	}

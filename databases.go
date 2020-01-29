@@ -31,7 +31,7 @@ func newUserdb(sliceLimit int) *usersdb {
 	}
 }
 
-func newDatabase(cfg *ServerConfig) * sql.DB{
+func newDatabase(cfg *AppConfig) * sql.DB{
 
 	createUserDb := "CREATE TABLE IF NOT EXISTS users (" +
 		"id INTEGER PRIMARY KEY," +

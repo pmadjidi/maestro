@@ -93,13 +93,13 @@ func (r *registerService) Register(ctx context.Context, req *RegisterReq) (*Empt
 	}
 
 
-	app,err :=  r.system.GetApp(req.AppName)
+	app,err :=  r.system.GetOrCreateApp(req.AppName,false)
 
 	if err != nil {
-		app, err = r.system.NewApp(req.GetAppName())
-		app.start()
+		r.system.log(fmt.Sprintf("App does not exist[%s] %s ",req.AppName,err.Error()))
+		app,err =  r.system.GetOrCreateApp(req.AppName,true)
 		if err != nil {
-			fmt.Printf("Error here...%s",err)
+			r.system.log(fmt.Sprintf("Creating App faild with [%s] %s",req.AppName,err.Error()))
 			return &Empty{}, err
 		}
 	}

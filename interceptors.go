@@ -37,7 +37,7 @@ func AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServe
 
 	m, err := handler(ctx, req)
 	if err != nil {
-		Info("RPC failed with error %v", err)
+		Info("RPC failed with error %v\n", err)
 	}
 	return m, err
 }

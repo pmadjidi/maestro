@@ -59,9 +59,13 @@ func (l *loginService) Authenticate(ctx context.Context, req *LoginReq) (*Empty,
 		return nil, fmt.Errorf(Status_INVALID_APPNAME.String())
 	}
 
-	app, err := l.system.GetApp(appName[0])
-	if err != nil {
-		return nil, err
+	aenv := newAppEnvelope(appName[0])
+
+	l.system.getApp <- aenv
+	app := <- aenv.app
+
+	if app == nil {
+		return nil, fmt.Errorf(Status_INVALID_APPNAME.String())
 	}
 
 	fmt.Printf("Got Auth request for %s\n", username)
