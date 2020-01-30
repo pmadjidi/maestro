@@ -14,7 +14,7 @@ const (
 	address = "localhost:50051"
 )
 
-func init() {
+func ainit() {
 	go func() {
 		server := NewServer()
 		server.Start(true)
@@ -31,9 +31,11 @@ func TestRegisterMaxNumberOfUsers(t *testing.T) {
 	}
 	defer conn.Close()
 	c := NewRegisterClient(conn)
-	cfg := createServerConfig()
+	//cfg := createServerConfig()
 
-	req := randomUsersForTests(cfg.MAX_NUMBER_OF_USERS, cfg.MAX_NUMBER_OF_APPS)
+
+
+	req := randomUsersForTests(1000, 1000)
 
 	var wg sync.WaitGroup
 	for sysIndex, system := range req {

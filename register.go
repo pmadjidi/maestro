@@ -84,8 +84,6 @@ func (r *registerService) validateReq(req *RegisterReq) Status {
 
 func (r *registerService) Register(ctx context.Context, req *RegisterReq) (*Empty,error) {
 
-
-
 	validate := r.validateReq(req)
 
 	if validate  != Status_VALIDATED {

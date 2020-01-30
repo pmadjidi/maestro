@@ -11,20 +11,37 @@ type Service interface {
 	Name() string
 }
 
-type App struct {
-	name     string
-	quit      chan bool
-	cfg       *AppConfig
-	users     *usersdb
-	messages  *messagesdb
+type appCommands struct {
 	loginQ    chan *loginEnvelope
 	registerQ chan *registerEnvelope
 	msgSendQ      chan *msgEnvelope
 	msgRecQ      chan *msgEnvelope
 	UserDbQ   chan []*User
 	MsgDBQ    chan []*Message
+}
+
+func newAppCommands(cfg *ServerConfig) *appCommands {
+	return &appCommands{
+		make(chan *loginEnvelope, cfg.SERVER_QEUEU_LENGTH),
+		make(chan *registerEnvelope, cfg.SERVER_QEUEU_LENGTH),
+		make(chan *msgEnvelope, cfg.SERVER_QEUEU_LENGTH),
+		make(chan *msgEnvelope, cfg.SERVER_QEUEU_LENGTH),
+		make(chan []*User, cfg.SERVER_QEUEU_LENGTH),
+		make(chan []*Message, cfg.SERVER_QEUEU_LENGTH),
+	}
+}
+
+type App struct {
+	name     string
+	quit      chan bool
+	cfg       *AppConfig
+	*appCommands
+	users     *usersdb
+	messages  *messagesdb
 	DATABASE  *sql.DB
 }
+
+
 
 func newApp(cfg *ServerConfig,name string) (*App, error) {
 	if name == ""  {
@@ -32,15 +49,11 @@ func newApp(cfg *ServerConfig,name string) (*App, error) {
 	}
 
 	appCfg := createAppConfig(cfg,name)
-	app := App{name,make(chan bool), appCfg,
+	app := App{name,make(chan bool),
+		appCfg,
+		newAppCommands(cfg),
 		newUserdb(cfg.ARRAY_PRE_ALLOCATION_LIMIT),
 		newMessageDb(),
-		make(chan *loginEnvelope, cfg.SERVER_QEUEU_LENGTH),
-		make(chan *registerEnvelope, cfg.SERVER_QEUEU_LENGTH),
-		make(chan *msgEnvelope, cfg.SERVER_QEUEU_LENGTH),
-		make(chan *msgEnvelope, cfg.SERVER_QEUEU_LENGTH),
-		make(chan []*User, cfg.SERVER_QEUEU_LENGTH),
-		make(chan []*Message, cfg.SERVER_QEUEU_LENGTH),
 		newDatabase(appCfg),
 	}
 	return &app,nil
@@ -63,6 +76,15 @@ func (a *App) startSubSystems() {
 	go a.messageManager()
 	go a.databaseManager()
 }
+
+func (a *App) reStartSubSystems() { // dump closed channels on restart...
+	a.appCommands = newAppCommands(a.cfg.ServerConfig)
+	go a.userManager()
+	go a.messageManager()
+	go a.databaseManager()
+}
+
+
 
 func (a *App) log(message string) {
 	fmt.Printf("@[%d]---[%s]App: [%s] %s ...\n",time.Now().Second(),a.cfg.SYSTEM_NAME,a.cfg.APP_NAME,message)

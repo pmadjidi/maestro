@@ -91,13 +91,13 @@ func createServerConfig(systemName ...string) *ServerConfig {
 
 	MAX_NUMBER_OF_USERS, err := strconv.Atoi(os.Getenv("MAX_NUMBER_OF_USERS"))
 	if err != nil {
-		MAX_NUMBER_OF_USERS = 1000
+		MAX_NUMBER_OF_USERS = 2000
 		os.Setenv("MAX_NUMBER_OF_USERS","100")
 	}
 
 	MAX_NUMBER_OF_APPS, err := strconv.Atoi(os.Getenv("MAX_NUMBER_OF_APPS"))
 	if err != nil {
-		MAX_NUMBER_OF_APPS = 1000
+		MAX_NUMBER_OF_APPS = 500
 		os.Setenv("MAX_NUMBER_OF_APPS","100")
 	}
 

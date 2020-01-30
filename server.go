@@ -66,27 +66,12 @@ func (s *Server) GetOrCreateApp(appName string, create bool) (*App, error) {
 	var app *App
 	aenv := newAppEnvelope(appName)
 	if create {
-		select {
-		case s.createApp <- aenv:
-		case <-time.After(s.cfg.SYSTEM_QUEUE_WAIT_BEFORE_TIME_OUT):
-			s.log("Timeout createApp")
-			return nil, fmt.Errorf(Status_TIMEOUT.String())
-		}
+		 s.createApp <- aenv     
 	} else {
-		select {
-		case s.getApp <- aenv:
-		case <-time.After(s.cfg.SYSTEM_QUEUE_WAIT_BEFORE_TIME_OUT):
-			s.log("Timeout getApp")
-			return nil, fmt.Errorf(Status_TIMEOUT.String())
-		}
+		 s.getApp <- aenv
 	}
 
-	select {
-	case app = <-aenv.app:
-	case <-time.After(s.cfg.SYSTEM_QUEUE_WAIT_BEFORE_TIME_OUT * 1000 * time.Second):
-		s.log(fmt.Sprintf("GetOrCreateApp: request timeout for [%s][%t]", aenv.appName, create))
-		return nil, fmt.Errorf(Status_TIMEOUT.String())
-	}
+	app = <-aenv.app
 
 	if app == nil && !create {
 		return nil, fmt.Errorf(Status_NOTFOUND.String())
@@ -112,11 +97,16 @@ func (s *Server) commandCenter() {
 		select {
 		case req := <-s.getApp:
 			s.processGetApp(req)
-		case req := <-s.createApp:
-			s.processCreateApp(req)
-		case <-time.After(10 * time.Second):
-			s.processDirectoryWatchDog()
-			s.log("End of directory scan")
+		default:
+			select {
+			case req := <-s.getApp:
+				s.processGetApp(req)
+			case req := <-s.createApp:
+				s.processCreateApp(req)
+			case <-time.After(10 * time.Second):
+				s.processDirectoryWatchDog()
+				s.log("End of directory scan")
+			}
 		}
 	}
 }

@@ -32,7 +32,7 @@ func (s *Server) processCreateApp(req *appEnvelope) {
 		s.apps[appName] = app
 		s.status[appName] = NewFlag()
 		s.status[appName].Set(NEW)
-		app.start()
+		go app.start()
 		req.app <- app
 	} else {
 		s.log(fmt.Sprintf("Failed to create App [%s]", req.appName))
@@ -67,7 +67,7 @@ func (s *Server) processDirectoryWatchDog() {
 				if s.status[app.name].Is(BLOCKED) {
 					s.log(fmt.Sprintf("Hum... Unblocking app [%s]", app.name))
 					s.status[app.name].Clear(BLOCKED)
-					s.apps[app.name].startSubSystems()
+					s.apps[app.name].reStartSubSystems()
 				}
 			}
 		}
