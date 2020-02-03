@@ -18,7 +18,7 @@ func (a *App) messageManager() {
 					_, ok := a.msg[m.Topic]
 					if !ok {
 						if len(a.msg) < a.cfg.MAX_NUMBER_OF_TOPICS {
-							a.msg[m.Topic] = make([]*Message, 0)
+							a.msg[m.Topic] = make(map[string]*Message, 0)
 						} else {
 							env.Status = Status_MAXIMUN_NUMBER_OF_TOPICS_REACHED
 							env.resp <- notify{}
@@ -27,7 +27,7 @@ func (a *App) messageManager() {
 
 						if len(a.msg[m.Topic]) < a.cfg.MAX_NUMBER_OF_MESSAGES_PER_TOPIC  {
 							m.Set(DIRTY)
-							a.msg[m.Topic] = append(a.msg[m.Topic], m)
+							a.msg[m.Topic][m.Uuid] = m
 							subscriptions, ok := a.subscriptions[m.Topic]
 							if ok {
 								for _, user := range subscriptions {

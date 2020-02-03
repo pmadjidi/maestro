@@ -8,7 +8,6 @@ import (
 	"log"
 	. "maestro/api"
 	"sync"
-	"time"
 )
 
 type notify struct{}
@@ -33,7 +32,7 @@ func newMessage(msgreq *MsgReq) *Message {
 }
 
 type messagesdb struct {
-	msg            map[string][]*Message
+	msg            map[string]map[string]*Message
 	subscriptions  map[string][]*User
 	mdirty          []*Message
 	mblocked        []*Message
@@ -42,7 +41,7 @@ type messagesdb struct {
 }
 
 func newMessageDb() *messagesdb {
-	return &messagesdb{make(map[string][]*Message),
+	return &messagesdb{make(map[string]map[string]*Message),
 		make(map[string][]*User),
 		make([]*Message, 0), make([]*Message, 0), 0, 0}
 }
@@ -66,7 +65,70 @@ func newMsgService(s *Server) *msgService {
 }
 
 func (m *msgService) Put(srv Msg_PutServer ) error {
-	//	log.Println("start new server")
+	m.system.log("Called put...")
+
+	var appName []string
+	ctx := srv.Context()
+
+	md, val := metadata.FromIncomingContext(ctx)
+	PrettyPrint(md)
+	if val {
+		appName = md.Get("app")
+		PrettyPrint(appName)
+		if len(appName) < 1 && appName[0] != "" {
+			return fmt.Errorf(Status_INVALID_APPNAME.String())
+		}
+	} else {
+		return fmt.Errorf(Status_NOAUTH.String())
+	}
+
+	app, err := m.system.GetOrCreateApp(appName[0], false)
+	if err != nil {
+		return err
+	}
+
+	for {
+
+		// exit if context is done
+		// or continue
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
+		// receive data from stream
+		req, err := srv.Recv()
+		if err == io.EOF {
+			// return will close stream from server side
+			log.Println("exit")
+			return nil
+		}
+		if err != nil {
+			log.Printf("receive error %v", err)
+			continue
+		}
+
+		m.system.log(fmt.Sprintf("Recived message [%s][%s]", req.Uuid, req.Topic))
+		m := newMessage(req)
+		e := newMsgEnvelope()
+		e.messages = append(e.messages, m)
+
+		app.msgRecQ <- e
+		<-e.resp
+
+		if err := srv.Send(&MsgResp{Status: e.Status, Uuid: e.messages[0].Uuid}); err != nil {
+			log.Printf("send error %v", err)
+		}
+
+	}
+
+}
+
+
+/*
+func (m *msgService) oldPut(srv Msg_PutServer ) error {
+	m.system.log("Called put...")
 
 	var appName []string
 	ctx := srv.Context()
@@ -100,13 +162,15 @@ loop:
 			req, err := srv.Recv()
 			if err == io.EOF {
 				// return will close stream from server side
-				log.Println("exit")
+				m.system.log("Exiting put")
 				break loop
 			}
 			if err != nil {
-				//log.Printf("MSG receive error %v", err)
+				m.system.log(fmt.Sprintf("Error [%s][%s][%s]",req.Uuid,req.Topic,err.Error()))
 				return err
 			}
+
+			m.system.log(fmt.Sprintf("Recived message [%s][%s]",req.Uuid,req.Topic))
 
 			m := newMessage(req)
 			e := newMsgEnvelope()
@@ -115,8 +179,6 @@ loop:
 
 			select {
 			case app.msgRecQ <- e:
-			case <-time.After(time.Second):
-				return fmt.Errorf(Status_TIMEOUT.String())
 			case <-ctx.Done():
 				return ctx.Err()
 			}
@@ -124,7 +186,7 @@ loop:
 			select {
 			case <-e.resp:
 				if e.Status == Status_SUCCESS {
-					return nil
+					srv.Send(&MsgResp{Status: e.Status,Uuid: e.messages[0].Uuid})
 				} else {
 					return fmt.Errorf(e.Status.String())
 				}
@@ -137,4 +199,6 @@ loop:
 
 	return nil
 }
+
+ */
 

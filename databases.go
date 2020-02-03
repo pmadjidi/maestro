@@ -143,9 +143,9 @@ func (a *App) readMessagesFromDatabase() {
 			a.log(fmt.Sprintf("Reading message %s",m.Uuid))
 			_,ok := a.msg[m.Topic]
 			if !ok {
-				a.msg[m.Topic] = make([]*Message,10)
+				a.msg[m.Topic] = make(map[string]*Message)
 			}
-			a.msg[m.Topic]= append(a.msg[m.Topic],m)
+			a.msg[m.Topic][m.Uuid]= m
 			messageCounter++
 		} else {
 			a.log(fmt.Sprintf("User %+v is marked deleted skipping", m.Uuid))

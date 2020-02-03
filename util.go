@@ -189,19 +189,21 @@ func randomUsersForTests(size,systems int) [][]*RegisterReq{
 
 
 
-func randomMessageForTest(size int,topic int) *MsgReq{
-	if size <= 12 {
-		size = 12
-	}
+func randomMessageForTest(numberOfMessages,numberOfTopics int) []*MsgReq{
 
-	return &MsgReq{
-		Uuid:uuid.New().String(),
-		Text: RandomString(size),
-		Pic: []byte(RandomString(size)),
-		ParentId: RandomString(size),
-		Topic: strconv.Itoa(topic),
-		TimeName: &timestamp.Timestamp{},
+	msgs := make([]*MsgReq,numberOfMessages)
+	for i := 0; i < numberOfMessages ; i++ {
+		newMsg := &MsgReq{
+			Uuid:     uuid.New().String(),
+			Text:     fmt.Sprintf("Message number [%d]",i),
+			Pic:      []byte(RandomString(100)),
+			ParentId:  uuid.New().String(),
+			Topic:    fmt.Sprintf("topic-%d",rangeRand(1,numberOfTopics)),
+			TimeName: &timestamp.Timestamp{},
 		}
+		msgs = append(msgs,newMsg)
+	}
+	return msgs
 }
 
 func decodeToken(token,appSecret string) (map[string]interface{},error) {

@@ -4,7 +4,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"io"
-	"log"
 	. "maestro/api"
 	"sync"
 	"testing"
@@ -14,41 +13,69 @@ import (
 	"context"
 )
 
-func registerArandomMessage(cfg *ServerConfig,token,appName string) error {
+func Test_Msg(t *testing.T)  {
+
+	postfix := 10000
+	token, appName, err := createUser(postfix, "theRightPassword")
+	if err != nil {
+		t.Errorf("Should not fail creating a user.. %+v", err)
+	} else {
+		t.Logf("token[%s] app[%s]", token, appName)
+	}
+
+	cfg := createAppConfig(createServerConfig(), appName)
 	numberOfMessages := cfg.MAX_NUMBER_OF_MESSAGES_PER_TOPIC
 
 	var sendFail, reciveFail chan *error
 	sendFail = make(chan *error, numberOfMessages)
 	reciveFail = make(chan *error, numberOfMessages)
 
-	clientDeadline := time.Now().Add(30 * time.Second)
+	clientDeadline := time.Now().Add(3 * time.Second)
 	ctx, cancel := context.WithDeadline(context.Background(), clientDeadline)
 	defer cancel()
-	ctx = metadata.AppendToOutgoingContext(ctx,"bearer-bin",token,"app",appName)
+	ctx = metadata.AppendToOutgoingContext(ctx, "bearer-bin", token, "app", appName)
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		t.Logf(err.Error())
+		t.Fail()
 	}
 	defer conn.Close()
 	c := NewMsgClient(conn)
 
+	msgs := randomMessageForTest(cfg.MAX_NUMBER_OF_MESSAGES_PER_TOPIC, cfg.MAX_NUMBER_OF_TOPICS)
+
+	/*
+	for _,m := range msgs {
+		PrettyPrint(m)
+	}
+
+	 */
+
+	t.Log("Before stream")
+
 	stream, err := c.Put(ctx)
 	if err != nil {
-		return err
+		t.Logf(err.Error())
+		t.Fail()
 	}
+
+	t.Log("After stream")
 
 	var wg sync.WaitGroup
 	wg.Add(1)
 
+	t.Log("Before go functions")
+
 	go func() {
-		wg.Done()
-		for i := 0; i < numberOfMessages; i++ {
-			r := randomMessageForTest(100, i)
-			err := stream.Send(r)
+		defer wg.Done()
+		t.Log("In go function for send")
+		for _, m := range msgs {
+			err := stream.Send(m)
 			if err != nil {
 				sendFail <- &err
 				break
 			}
+			t.Logf("sending Message[%s]",m.Uuid)
 		}
 		close(sendFail)
 	}()
@@ -56,54 +83,40 @@ func registerArandomMessage(cfg *ServerConfig,token,appName string) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		loop:
+		t.Log("In go function for Rec")
+	loop:
 		for {
-			_, err = stream.Recv()
+			q, err := stream.Recv()
 			if err != nil {
 				if err == io.EOF {
 					break loop
-					reciveFail <- &err
 				}
+				reciveFail <- &err
+			} else {
+				t.Logf("Recieved Status[%s] for Message[%s]", q.Status.String(), q.Uuid)
 			}
 		}
 		close(reciveFail)
 	}()
 
+	t.Log("Waiting for go functions to terminate")
+
 	wg.Wait()
 
 	for e := range sendFail {
 		if e != nil {
-			return *e
+			t.Logf(err.Error())
+			t.Fail()
 		}
 	}
 
 	for e := range reciveFail {
 		if e != nil {
-			return *e
+			t.Logf(err.Error())
+			t.Fail()
 		}
 	}
 
-	return nil
+	t.Logf("Success")
 
-}
-
-func Test_Msg(t *testing.T) {
-	cfg := createServerConfig()
-	cfg.MAX_NUMBER_OF_TOPICS = 10
-	cfg.MAX_NUMBER_OF_MESSAGES_PER_TOPIC = 100
-
-	postfix := 10000
-	token,app,err := createUser(postfix, "theRightPassword")
-	if err != nil {
-		t.Errorf("Should not fail creating a user.. %+v", err)
-	} else {
-		t.Logf("token[%s] app[%s]",token,app)
-	}
-
-	for i := 0; i < cfg.MAX_NUMBER_OF_TOPICS; i++ {
-		err := registerArandomMessage(cfg,token,app)
-		if err != nil {
-			t.Errorf("Should not fail in stream send or recive... %+v", err)
-		}
-	}
 }
