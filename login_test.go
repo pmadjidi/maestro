@@ -70,7 +70,7 @@ func createUser(postfix int, password string) (string,string,error) {
 		req,
 		grpc.Header(&header),
 		grpc.Trailer(&trailer),  )
-	if err != nil {
+	if err == nil {
 		token := header.Get("bearer-bin")[0]
 		app := header.Get("app")[0]
 		return token,app,nil

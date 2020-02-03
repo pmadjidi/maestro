@@ -195,7 +195,7 @@ func randomMessageForTest(size int,topic int) *MsgReq{
 	}
 
 	return &MsgReq{
-		Id:uuid.New().String(),
+		Uuid:uuid.New().String(),
 		Text: RandomString(size),
 		Pic: []byte(RandomString(size)),
 		ParentId: RandomString(size),

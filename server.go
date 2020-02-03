@@ -129,7 +129,7 @@ func (s *Server) Start(reset bool) {
 			RegisterRegisterServer(s.grpcs, srv.(RegisterServer))
 		case "messageService":
 			s.log("RPC Registring MessageService")
-			RegisterMessageServer(s.grpcs, srv.(MessageServer))
+			RegisterMsgServer(s.grpcs, srv.(MsgServer))
 		}
 	}
 

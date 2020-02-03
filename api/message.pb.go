@@ -26,13 +26,13 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type MsgReq struct {
-	Id                   string               `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Text                 string               `protobuf:"bytes,2,opt,name=text,proto3" json:"text,omitempty"`
-	Pic                  []byte               `protobuf:"bytes,3,opt,name=pic,proto3" json:"pic,omitempty"`
-	ParentId             string               `protobuf:"bytes,4,opt,name=parentId,proto3" json:"parentId,omitempty"`
-	Topic                string               `protobuf:"bytes,5,opt,name=topic,proto3" json:"topic,omitempty"`
-	TimeName             *timestamp.Timestamp `protobuf:"bytes,6,opt,name=time_name,json=timeName,proto3" json:"time_name,omitempty"`
-	Status               Status               `protobuf:"varint,7,opt,name=status,proto3,enum=api.Status" json:"status,omitempty"`
+	Text                 string               `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
+	Pic                  []byte               `protobuf:"bytes,2,opt,name=pic,proto3" json:"pic,omitempty"`
+	ParentId             string               `protobuf:"bytes,3,opt,name=parentId,proto3" json:"parentId,omitempty"`
+	Topic                string               `protobuf:"bytes,4,opt,name=topic,proto3" json:"topic,omitempty"`
+	TimeName             *timestamp.Timestamp `protobuf:"bytes,5,opt,name=time_name,json=timeName,proto3" json:"time_name,omitempty"`
+	Status               Status               `protobuf:"varint,6,opt,name=status,proto3,enum=api.Status" json:"status,omitempty"`
+	Uuid                 string               `protobuf:"bytes,7,opt,name=uuid,proto3" json:"uuid,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
 	XXX_sizecache        int32                `json:"-"`
@@ -62,13 +62,6 @@ func (m *MsgReq) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_MsgReq proto.InternalMessageInfo
-
-func (m *MsgReq) GetId() string {
-	if m != nil {
-		return m.Id
-	}
-	return ""
-}
 
 func (m *MsgReq) GetText() string {
 	if m != nil {
@@ -112,30 +105,86 @@ func (m *MsgReq) GetStatus() Status {
 	return Status_SUCCESS
 }
 
+func (m *MsgReq) GetUuid() string {
+	if m != nil {
+		return m.Uuid
+	}
+	return ""
+}
+
+type MsgResp struct {
+	Status               Status   `protobuf:"varint,1,opt,name=status,proto3,enum=api.Status" json:"status,omitempty"`
+	Uuid                 string   `protobuf:"bytes,2,opt,name=uuid,proto3" json:"uuid,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *MsgResp) Reset()         { *m = MsgResp{} }
+func (m *MsgResp) String() string { return proto.CompactTextString(m) }
+func (*MsgResp) ProtoMessage()    {}
+func (*MsgResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor_33c57e4bae7b9afd, []int{1}
+}
+
+func (m *MsgResp) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MsgResp.Unmarshal(m, b)
+}
+func (m *MsgResp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MsgResp.Marshal(b, m, deterministic)
+}
+func (m *MsgResp) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgResp.Merge(m, src)
+}
+func (m *MsgResp) XXX_Size() int {
+	return xxx_messageInfo_MsgResp.Size(m)
+}
+func (m *MsgResp) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgResp.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgResp proto.InternalMessageInfo
+
+func (m *MsgResp) GetStatus() Status {
+	if m != nil {
+		return m.Status
+	}
+	return Status_SUCCESS
+}
+
+func (m *MsgResp) GetUuid() string {
+	if m != nil {
+		return m.Uuid
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*MsgReq)(nil), "api.MsgReq")
+	proto.RegisterType((*MsgResp)(nil), "api.MsgResp")
 }
 
 func init() { proto.RegisterFile("message.proto", fileDescriptor_33c57e4bae7b9afd) }
 
 var fileDescriptor_33c57e4bae7b9afd = []byte{
-	// 247 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x4c, 0x90, 0xc1, 0x4e, 0x03, 0x21,
-	0x10, 0x86, 0xc3, 0x6e, 0xbb, 0x6d, 0xa7, 0xb5, 0x31, 0x13, 0x0f, 0x84, 0x8b, 0x1b, 0x7b, 0xe1,
-	0x44, 0xcd, 0x7a, 0xf0, 0x19, 0x3c, 0xac, 0x07, 0xf4, 0x6e, 0xa8, 0x8b, 0x84, 0x44, 0x0a, 0x16,
-	0x9a, 0xf8, 0x94, 0x3e, 0x93, 0x59, 0x70, 0x4d, 0x6f, 0xf3, 0xff, 0xf3, 0x25, 0x7c, 0x03, 0x5c,
-	0x39, 0x1d, 0xa3, 0x32, 0x5a, 0x84, 0x93, 0x4f, 0x1e, 0x6b, 0x15, 0x2c, 0xdb, 0xc4, 0xa4, 0xd2,
-	0x39, 0x96, 0x8a, 0xdd, 0x1a, 0xef, 0xcd, 0xa7, 0xde, 0xe7, 0x74, 0x38, 0x7f, 0xec, 0x93, 0x75,
-	0x3a, 0x26, 0xe5, 0x42, 0x01, 0xee, 0x7e, 0x08, 0x34, 0x7d, 0x34, 0x52, 0x7f, 0xe1, 0x16, 0x2a,
-	0x3b, 0x50, 0xd2, 0x12, 0xbe, 0x92, 0x95, 0x1d, 0x10, 0x61, 0x96, 0xf4, 0x77, 0xa2, 0x55, 0x6e,
-	0xf2, 0x8c, 0xd7, 0x50, 0x07, 0xfb, 0x4e, 0xeb, 0x96, 0xf0, 0x8d, 0x1c, 0x47, 0x64, 0xb0, 0x0c,
-	0xea, 0xa4, 0x8f, 0xe9, 0x69, 0xa0, 0xb3, 0x4c, 0xfe, 0x67, 0xbc, 0x81, 0x79, 0xf2, 0x23, 0x3f,
-	0xcf, 0x8b, 0x12, 0xf0, 0x11, 0x56, 0xa3, 0xc5, 0xdb, 0x51, 0x39, 0x4d, 0x9b, 0x96, 0xf0, 0x75,
-	0xc7, 0x44, 0xf1, 0x14, 0x93, 0xa7, 0x78, 0x9d, 0x3c, 0xe5, 0x72, 0x84, 0x9f, 0x95, 0xd3, 0xb8,
-	0x83, 0xa6, 0x1c, 0x47, 0x17, 0x2d, 0xe1, 0xdb, 0x6e, 0x2d, 0x54, 0xb0, 0xe2, 0x25, 0x57, 0xf2,
-	0x6f, 0xd5, 0x09, 0x58, 0xf4, 0xe5, 0x57, 0x70, 0x07, 0x75, 0x1f, 0x0d, 0x16, 0xac, 0x1c, 0xc9,
-	0x2e, 0x03, 0x27, 0xf7, 0xe4, 0xd0, 0xe4, 0x27, 0x1f, 0x7e, 0x03, 0x00, 0x00, 0xff, 0xff, 0x68,
-	0x22, 0xc1, 0x06, 0x4c, 0x01, 0x00, 0x00,
+	// 266 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x50, 0xb1, 0x4e, 0xc3, 0x30,
+	0x10, 0x95, 0x9b, 0x36, 0x6d, 0xaf, 0x01, 0xa1, 0x13, 0x83, 0x95, 0x85, 0xa8, 0x30, 0x44, 0x42,
+	0x72, 0x51, 0x18, 0xd8, 0xd9, 0x18, 0xca, 0x10, 0xd8, 0x91, 0x4b, 0x4d, 0x64, 0x09, 0xd7, 0xa6,
+	0x3e, 0x4b, 0x7c, 0x27, 0x5f, 0x84, 0x6c, 0x53, 0xca, 0xc6, 0xf6, 0xde, 0xdd, 0xf3, 0xf3, 0x7b,
+	0x07, 0x27, 0x46, 0x79, 0x2f, 0x07, 0x25, 0xdc, 0xde, 0x92, 0xc5, 0x42, 0x3a, 0x5d, 0x57, 0x9e,
+	0x24, 0x05, 0x9f, 0x47, 0xf5, 0xc5, 0x60, 0xed, 0xf0, 0xae, 0x56, 0x89, 0x6d, 0xc2, 0xdb, 0x8a,
+	0xb4, 0x51, 0x9e, 0xa4, 0x71, 0x59, 0xb0, 0xfc, 0x62, 0x50, 0xae, 0xfd, 0xd0, 0xab, 0x0f, 0x44,
+	0x18, 0x93, 0xfa, 0x24, 0xce, 0x1a, 0xd6, 0xce, 0xfb, 0x84, 0xf1, 0x0c, 0x0a, 0xa7, 0x5f, 0xf9,
+	0xa8, 0x61, 0x6d, 0xd5, 0x47, 0x88, 0x35, 0xcc, 0x9c, 0xdc, 0xab, 0x1d, 0x3d, 0x6c, 0x79, 0x91,
+	0x94, 0xbf, 0x1c, 0xcf, 0x61, 0x42, 0x36, 0xea, 0xc7, 0x69, 0x91, 0x09, 0xde, 0xc1, 0x3c, 0xfe,
+	0xfa, 0xb2, 0x93, 0x46, 0xf1, 0x49, 0xc3, 0xda, 0x45, 0x57, 0x8b, 0x9c, 0x4b, 0x1c, 0x72, 0x89,
+	0xe7, 0x43, 0xae, 0x7e, 0x16, 0xc5, 0x8f, 0xd2, 0x28, 0xbc, 0x84, 0x32, 0x97, 0xe1, 0x65, 0xc3,
+	0xda, 0xd3, 0x6e, 0x21, 0xa4, 0xd3, 0xe2, 0x29, 0x8d, 0xfa, 0x9f, 0x55, 0x4c, 0x1d, 0x82, 0xde,
+	0xf2, 0x69, 0x4e, 0x1d, 0xf1, 0xf2, 0x1e, 0xa6, 0xa9, 0x93, 0x77, 0x7f, 0x3c, 0xd8, 0xff, 0x1e,
+	0xa3, 0xa3, 0x47, 0x77, 0x0d, 0xc5, 0xda, 0x0f, 0x78, 0x05, 0x85, 0x0b, 0x84, 0xf9, 0x59, 0x3e,
+	0x54, 0x5d, 0x1d, 0x89, 0x77, 0x2d, 0xbb, 0x61, 0x9b, 0x32, 0xf5, 0xb8, 0xfd, 0x0e, 0x00, 0x00,
+	0xff, 0xff, 0x7d, 0xce, 0xad, 0x58, 0x91, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -146,88 +195,88 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// MessageClient is the client API for Message service.
+// MsgClient is the client API for Msg service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type MessageClient interface {
-	Msg(ctx context.Context, opts ...grpc.CallOption) (Message_MsgClient, error)
+type MsgClient interface {
+	Put(ctx context.Context, opts ...grpc.CallOption) (Msg_PutClient, error)
 }
 
-type messageClient struct {
+type msgClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewMessageClient(cc *grpc.ClientConn) MessageClient {
-	return &messageClient{cc}
+func NewMsgClient(cc *grpc.ClientConn) MsgClient {
+	return &msgClient{cc}
 }
 
-func (c *messageClient) Msg(ctx context.Context, opts ...grpc.CallOption) (Message_MsgClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_Message_serviceDesc.Streams[0], "/api.Message/Msg", opts...)
+func (c *msgClient) Put(ctx context.Context, opts ...grpc.CallOption) (Msg_PutClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Msg_serviceDesc.Streams[0], "/api.Msg/put", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &messageMsgClient{stream}
+	x := &msgPutClient{stream}
 	return x, nil
 }
 
-type Message_MsgClient interface {
+type Msg_PutClient interface {
 	Send(*MsgReq) error
-	Recv() (*MsgReq, error)
+	Recv() (*MsgResp, error)
 	grpc.ClientStream
 }
 
-type messageMsgClient struct {
+type msgPutClient struct {
 	grpc.ClientStream
 }
 
-func (x *messageMsgClient) Send(m *MsgReq) error {
+func (x *msgPutClient) Send(m *MsgReq) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *messageMsgClient) Recv() (*MsgReq, error) {
-	m := new(MsgReq)
+func (x *msgPutClient) Recv() (*MsgResp, error) {
+	m := new(MsgResp)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-// MessageServer is the server API for Message service.
-type MessageServer interface {
-	Msg(Message_MsgServer) error
+// MsgServer is the server API for Msg service.
+type MsgServer interface {
+	Put(Msg_PutServer) error
 }
 
-// UnimplementedMessageServer can be embedded to have forward compatible implementations.
-type UnimplementedMessageServer struct {
+// UnimplementedMsgServer can be embedded to have forward compatible implementations.
+type UnimplementedMsgServer struct {
 }
 
-func (*UnimplementedMessageServer) Msg(srv Message_MsgServer) error {
-	return status.Errorf(codes.Unimplemented, "method Msg not implemented")
+func (*UnimplementedMsgServer) Put(srv Msg_PutServer) error {
+	return status.Errorf(codes.Unimplemented, "method Put not implemented")
 }
 
-func RegisterMessageServer(s *grpc.Server, srv MessageServer) {
-	s.RegisterService(&_Message_serviceDesc, srv)
+func RegisterMsgServer(s *grpc.Server, srv MsgServer) {
+	s.RegisterService(&_Msg_serviceDesc, srv)
 }
 
-func _Message_Msg_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(MessageServer).Msg(&messageMsgServer{stream})
+func _Msg_Put_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(MsgServer).Put(&msgPutServer{stream})
 }
 
-type Message_MsgServer interface {
-	Send(*MsgReq) error
+type Msg_PutServer interface {
+	Send(*MsgResp) error
 	Recv() (*MsgReq, error)
 	grpc.ServerStream
 }
 
-type messageMsgServer struct {
+type msgPutServer struct {
 	grpc.ServerStream
 }
 
-func (x *messageMsgServer) Send(m *MsgReq) error {
+func (x *msgPutServer) Send(m *MsgResp) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *messageMsgServer) Recv() (*MsgReq, error) {
+func (x *msgPutServer) Recv() (*MsgReq, error) {
 	m := new(MsgReq)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -235,14 +284,14 @@ func (x *messageMsgServer) Recv() (*MsgReq, error) {
 	return m, nil
 }
 
-var _Message_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "api.Message",
-	HandlerType: (*MessageServer)(nil),
+var _Msg_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "api.Msg",
+	HandlerType: (*MsgServer)(nil),
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "Msg",
-			Handler:       _Message_Msg_Handler,
+			StreamName:    "put",
+			Handler:       _Msg_Put_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

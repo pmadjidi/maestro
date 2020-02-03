@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+//	"github.com/grpc-ecosystem/go-grpc-middleware"
  	. "maestro/api"
 	"strings"
 )
@@ -43,41 +44,24 @@ func AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServe
 }
 
 
-//func(srv interface{}, ss ServerStream, info *StreamServerInfo, handler StreamHandler) error
-
-/*
-func AuthInterceptorStream(ctx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.StreamServerInterceptor) (interface{}, error) {
-
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, errors.New(api.Status_INVALID_TOKEN.String())
-	}
-	if !verifyToken(md["bearer-bin"]) {
-		return nil, fmt.Errorf(api.Status_NOAUTH.String())
-	}
-
-	err := handler(ctx, req)
-	if err != nil {
-		Info("RPC failed with error %v", err)
-	}
-	return m, err
-}
-*/
-
 /*
 
-func (a *App) AutnInterceptorStream(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-	newCtx := newTagsForCtx(stream.Context()
-	if o.requestFieldsFunc == nil {
-		// Short-circuit, don't do the expensive bit of allocating a wrappedStream.
-		wrappedStream := grpc_middleware.WrapServerStream(stream)
-		wrappedStream.WrappedContext = newCtx
-		return handler(srv, wrappedStream)
+func StreamServerInterceptor(authFunc AuthFunc) grpc.StreamServerInterceptor {
+	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+		var newCtx context.Context
+		var err error
+		if overrideSrv, ok := srv.(ServiceAuthFuncOverride); ok {
+			newCtx, err = overrideSrv.AuthFuncOverride(stream.Context(), info.FullMethod)
+		} else {
+			newCtx, err = authFunc(stream.Context())
+		}
+		if err != nil {
+			return err
+		}
+		wrapped := grpc_middleware.WrapServerStream(stream)
+		wrapped.WrappedContext = newCtx
+		return handler(srv, wrapped)
 	}
-	wrapped := &wrappedStream{stream, info, o, newCtx, true}
-	err := handler(srv, wrapped)
-	return err
 }
-
 
  */

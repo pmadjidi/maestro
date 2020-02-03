@@ -8,8 +8,9 @@ import (
 )
 
 type Service interface {
-	Name() string
+	getname() string
 }
+
 
 type appCommands struct {
 	loginQ    chan *loginEnvelope
@@ -36,9 +37,9 @@ type App struct {
 	quit      chan bool
 	cfg       *AppConfig
 	*appCommands
-	users     *usersdb
-	messages  *messagesdb
-	DATABASE  *sql.DB
+	*usersdb
+	*messagesdb
+	*sql.DB
 }
 
 

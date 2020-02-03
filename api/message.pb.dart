@@ -16,13 +16,13 @@ import 'status.pbenum.dart' as $0;
 
 class MsgReq extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo('MsgReq', package: const $pb.PackageName('api'), createEmptyInstance: create)
-    ..aOS(1, 'id')
-    ..aOS(2, 'text')
-    ..a<$core.List<$core.int>>(3, 'pic', $pb.PbFieldType.OY)
-    ..aOS(4, 'parentId', protoName: 'parentId')
-    ..aOS(5, 'topic')
-    ..aOM<$2.Timestamp>(6, 'timeName', subBuilder: $2.Timestamp.create)
-    ..e<$0.Status>(7, 'status', $pb.PbFieldType.OE, defaultOrMaker: $0.Status.SUCCESS, valueOf: $0.Status.valueOf, enumValues: $0.Status.values)
+    ..aOS(1, 'text')
+    ..a<$core.List<$core.int>>(2, 'pic', $pb.PbFieldType.OY)
+    ..aOS(3, 'parentId', protoName: 'parentId')
+    ..aOS(4, 'topic')
+    ..aOM<$2.Timestamp>(5, 'timeName', subBuilder: $2.Timestamp.create)
+    ..e<$0.Status>(6, 'status', $pb.PbFieldType.OE, defaultOrMaker: $0.Status.SUCCESS, valueOf: $0.Status.valueOf, enumValues: $0.Status.values)
+    ..aOS(7, 'uuid')
     ..hasRequiredFields = false
   ;
 
@@ -42,78 +42,119 @@ class MsgReq extends $pb.GeneratedMessage {
   static MsgReq _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
+  $core.String get text => $_getSZ(0);
   @$pb.TagNumber(1)
-  set id($core.String v) { $_setString(0, v); }
+  set text($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
+  $core.bool hasText() => $_has(0);
   @$pb.TagNumber(1)
-  void clearId() => clearField(1);
+  void clearText() => clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get text => $_getSZ(1);
+  $core.List<$core.int> get pic => $_getN(1);
   @$pb.TagNumber(2)
-  set text($core.String v) { $_setString(1, v); }
+  set pic($core.List<$core.int> v) { $_setBytes(1, v); }
   @$pb.TagNumber(2)
-  $core.bool hasText() => $_has(1);
+  $core.bool hasPic() => $_has(1);
   @$pb.TagNumber(2)
-  void clearText() => clearField(2);
+  void clearPic() => clearField(2);
 
   @$pb.TagNumber(3)
-  $core.List<$core.int> get pic => $_getN(2);
+  $core.String get parentId => $_getSZ(2);
   @$pb.TagNumber(3)
-  set pic($core.List<$core.int> v) { $_setBytes(2, v); }
+  set parentId($core.String v) { $_setString(2, v); }
   @$pb.TagNumber(3)
-  $core.bool hasPic() => $_has(2);
+  $core.bool hasParentId() => $_has(2);
   @$pb.TagNumber(3)
-  void clearPic() => clearField(3);
+  void clearParentId() => clearField(3);
 
   @$pb.TagNumber(4)
-  $core.String get parentId => $_getSZ(3);
+  $core.String get topic => $_getSZ(3);
   @$pb.TagNumber(4)
-  set parentId($core.String v) { $_setString(3, v); }
+  set topic($core.String v) { $_setString(3, v); }
   @$pb.TagNumber(4)
-  $core.bool hasParentId() => $_has(3);
+  $core.bool hasTopic() => $_has(3);
   @$pb.TagNumber(4)
-  void clearParentId() => clearField(4);
+  void clearTopic() => clearField(4);
 
   @$pb.TagNumber(5)
-  $core.String get topic => $_getSZ(4);
+  $2.Timestamp get timeName => $_getN(4);
   @$pb.TagNumber(5)
-  set topic($core.String v) { $_setString(4, v); }
+  set timeName($2.Timestamp v) { setField(5, v); }
   @$pb.TagNumber(5)
-  $core.bool hasTopic() => $_has(4);
+  $core.bool hasTimeName() => $_has(4);
   @$pb.TagNumber(5)
-  void clearTopic() => clearField(5);
+  void clearTimeName() => clearField(5);
+  @$pb.TagNumber(5)
+  $2.Timestamp ensureTimeName() => $_ensure(4);
 
   @$pb.TagNumber(6)
-  $2.Timestamp get timeName => $_getN(5);
+  $0.Status get status => $_getN(5);
   @$pb.TagNumber(6)
-  set timeName($2.Timestamp v) { setField(6, v); }
+  set status($0.Status v) { setField(6, v); }
   @$pb.TagNumber(6)
-  $core.bool hasTimeName() => $_has(5);
+  $core.bool hasStatus() => $_has(5);
   @$pb.TagNumber(6)
-  void clearTimeName() => clearField(6);
-  @$pb.TagNumber(6)
-  $2.Timestamp ensureTimeName() => $_ensure(5);
+  void clearStatus() => clearField(6);
 
   @$pb.TagNumber(7)
-  $0.Status get status => $_getN(6);
+  $core.String get uuid => $_getSZ(6);
   @$pb.TagNumber(7)
-  set status($0.Status v) { setField(7, v); }
+  set uuid($core.String v) { $_setString(6, v); }
   @$pb.TagNumber(7)
-  $core.bool hasStatus() => $_has(6);
+  $core.bool hasUuid() => $_has(6);
   @$pb.TagNumber(7)
-  void clearStatus() => clearField(7);
+  void clearUuid() => clearField(7);
 }
 
-class MessageApi {
-  $pb.RpcClient _client;
-  MessageApi(this._client);
+class MsgResp extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo('MsgResp', package: const $pb.PackageName('api'), createEmptyInstance: create)
+    ..e<$0.Status>(1, 'status', $pb.PbFieldType.OE, defaultOrMaker: $0.Status.SUCCESS, valueOf: $0.Status.valueOf, enumValues: $0.Status.values)
+    ..aOS(2, 'uuid')
+    ..hasRequiredFields = false
+  ;
 
-  $async.Future<MsgReq> msg($pb.ClientContext ctx, MsgReq request) {
-    var emptyResponse = MsgReq();
-    return _client.invoke<MsgReq>(ctx, 'Message', 'Msg', request, emptyResponse);
+  MsgResp._() : super();
+  factory MsgResp() => create();
+  factory MsgResp.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory MsgResp.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  MsgResp clone() => MsgResp()..mergeFromMessage(this);
+  MsgResp copyWith(void Function(MsgResp) updates) => super.copyWith((message) => updates(message as MsgResp));
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static MsgResp create() => MsgResp._();
+  MsgResp createEmptyInstance() => create();
+  static $pb.PbList<MsgResp> createRepeated() => $pb.PbList<MsgResp>();
+  @$core.pragma('dart2js:noInline')
+  static MsgResp getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MsgResp>(create);
+  static MsgResp _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $0.Status get status => $_getN(0);
+  @$pb.TagNumber(1)
+  set status($0.Status v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasStatus() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearStatus() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get uuid => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set uuid($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasUuid() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearUuid() => clearField(2);
+}
+
+class MsgApi {
+  $pb.RpcClient _client;
+  MsgApi(this._client);
+
+  $async.Future<MsgResp> put($pb.ClientContext ctx, MsgReq request) {
+    var emptyResponse = MsgResp();
+    return _client.invoke<MsgResp>(ctx, 'Msg', 'put', request, emptyResponse);
   }
 }
 

@@ -61,21 +61,21 @@ loop:
 
 		case <-time.After(a.cfg.WRITE_LATENCY * time.Millisecond):
 			//fmt.Printf("loginServer: Looking for changes in user database...\n")
-			for _, aUser := range a.users.db {
+			for _, aUser := range a.udb {
 				aUser.Lock()
 				if aUser.status.Is(DIRTY) == true {
-					a.users.dirty = append(a.users.dirty, aUser)
-					a.users.dirtyCounter += 1
+					a.udirty = append(a.udirty, aUser)
+					a.udirtyCounter += 1
 					aUser.status.Clear(DIRTY)
 				}
 				aUser.Unlock()
 			}
-			if a.users.dirtyCounter > 0 {
-				fmt.Printf("LoginServer, dirty users found [%d]...\n", len(a.users.dirty))
+			if a.udirtyCounter > 0 {
+				fmt.Printf("LoginServer, dirty users found [%d]...\n", len(a.udirty))
 				select {
-				case a.UserDbQ <- a.users.dirty:
-					a.users.dirty = make([]*User, 0)
-					a.users.dirtyCounter = 0
+				case a.UserDbQ <- a.udirty:
+					a.udirty = make([]*User, 0)
+					a.udirtyCounter = 0
 				case <-time.After(2 * time.Second):
 					fmt.Printf("loginServer: database server blocked ...\n")
 				}
@@ -83,18 +83,18 @@ loop:
 
 		case env, ok := <-a.registerQ:
 			if ok {
-				if len(a.users.db) > a.cfg.MAX_NUMBER_OF_USERS {
+				if len(a.udb) > a.cfg.MAX_NUMBER_OF_USERS {
 					env.status = Status_MAXIMUN_NUMBER_OF_USERS_REACHED
 				} else {
 					req := <-env.req
-					_, exists := a.users.db[req.UserName]
+					_, exists := a.udb[req.UserName]
 					if exists {
 						fmt.Printf("User %+v exists\n", req)
 						env.status = Status_EXITSTS
 					} else {
 						newUser := newUser(req)
 						newUser.status.Set(DIRTY)
-						a.users.db[newUser.UserName] = newUser
+						a.udb[newUser.UserName] = newUser
 						token, err := a.issueToken(req.GetUserName(), req.GetDevice())
 						if err != nil {
 							fmt.Printf("Error %+v", err)
@@ -112,12 +112,12 @@ loop:
 
 		case env, ok := <-a.msgSendQ:
 			if ok {
-				aUser, ok := a.users.db[env.userName]
+				aUser, ok := a.udb[env.userName]
 				if !ok {
 					env.Status = Status_INVALID_USERNAME
 				} else {
 					env.Status = Status_SUCCESS
-					env.messages <- aUser.timeLine
+					env.messages = aUser.timeLine
 				}
 				env.resp <- notify{}
 			} else {
@@ -139,7 +139,7 @@ loop:
 
 func (a *App) tryLogin(userName string, pass []byte) Status {
 
-	aUser, userExists := a.users.db[userName]
+	aUser, userExists := a.udb[userName]
 	if !userExists {
 		return Status_INVALID_USERNAME
 	}
@@ -166,7 +166,7 @@ func (a *App) tryLogin(userName string, pass []byte) Status {
 }
 
 func (a *App) presistUser(users []*User) {
-	tx, err := a.DATABASE.Begin()
+	tx, err := a.Begin()
 	handleError(err)
 	for i := 0; i < len(users); i++ {
 		u := users[i]

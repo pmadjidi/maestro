@@ -15,24 +15,24 @@ import 'message.pbjson.dart';
 
 export 'message.pb.dart';
 
-abstract class MessageServiceBase extends $pb.GeneratedService {
-  $async.Future<$5.MsgReq> msg($pb.ServerContext ctx, $5.MsgReq request);
+abstract class MsgServiceBase extends $pb.GeneratedService {
+  $async.Future<$5.MsgResp> put($pb.ServerContext ctx, $5.MsgReq request);
 
   $pb.GeneratedMessage createRequest($core.String method) {
     switch (method) {
-      case 'Msg': return $5.MsgReq();
+      case 'put': return $5.MsgReq();
       default: throw $core.ArgumentError('Unknown method: $method');
     }
   }
 
   $async.Future<$pb.GeneratedMessage> handleCall($pb.ServerContext ctx, $core.String method, $pb.GeneratedMessage request) {
     switch (method) {
-      case 'Msg': return this.msg(ctx, request);
+      case 'put': return this.put(ctx, request);
       default: throw $core.ArgumentError('Unknown method: $method');
     }
   }
 
-  $core.Map<$core.String, $core.dynamic> get $json => MessageServiceBase$json;
-  $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> get $messageJson => MessageServiceBase$messageJson;
+  $core.Map<$core.String, $core.dynamic> get $json => MsgServiceBase$json;
+  $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> get $messageJson => MsgServiceBase$messageJson;
 }
 

@@ -14,24 +14,21 @@ func (a *App) messageManager() {
 		select {
 		case env, ok := <-a.msgRecQ:
 			if ok {
-				messages := <-env.messages
-			innerloop:
-				for _, m := range messages {
-					_, ok := a.messages.msg[m.Topic]
+					for _,m := range env.messages {
+					_, ok := a.msg[m.Topic]
 					if !ok {
-						if len(a.messages.msg) < a.cfg.MAX_NUMBER_OF_TOPICS {
-							a.messages.msg[m.Topic] = make([]*Message, 0)
+						if len(a.msg) < a.cfg.MAX_NUMBER_OF_TOPICS {
+							a.msg[m.Topic] = make([]*Message, 0)
 						} else {
 							env.Status = Status_MAXIMUN_NUMBER_OF_TOPICS_REACHED
-							break innerloop
+							env.resp <- notify{}
+							continue
 						}
-					}
 
-					if env.Status != Status_MAXIMUN_NUMBER_OF_TOPICS_REACHED {
-						if len(a.messages.msg[m.Topic]) < a.cfg.MAX_NUMBER_OF_MESSAGES_PER_TOPIC {
+						if len(a.msg[m.Topic]) < a.cfg.MAX_NUMBER_OF_MESSAGES_PER_TOPIC  {
 							m.Set(DIRTY)
-							a.messages.msg[m.Topic] = append(a.messages.msg[m.Topic], m)
-							subscriptions, ok := a.messages.subscriptions[m.Topic]
+							a.msg[m.Topic] = append(a.msg[m.Topic], m)
+							subscriptions, ok := a.subscriptions[m.Topic]
 							if ok {
 								for _, user := range subscriptions {
 									user.Lock()
@@ -43,11 +40,12 @@ func (a *App) messageManager() {
 							env.Status = Status_SUCCESS
 						} else {
 							env.Status = Status_MAXIMUN_NUMBER_OF_MESSAGES_PEER_TOPIC_REACHED
+							env.resp <- notify{}
+							continue
 						}
 					}
 				}
 				//fmt.Printf("messageManager status is %s\n",res.Status.String())
-				env.resp <- notify{}
 			} else {
 				signalmsgReQ = true
 				if signalmsgReQ {
@@ -59,23 +57,23 @@ func (a *App) messageManager() {
 
 		case <-time.After(a.cfg.WRITE_LATENCY * time.Millisecond):
 			//fmt.Printf("messageManager: Looking for changes in message database...\n")
-			for _, messages := range a.messages.msg {
+			for _, messages := range a.msg {
 				for _, aMessage := range messages {
 					aMessage.Lock()
 					if aMessage.Is(DIRTY) == true {
-						a.messages.dirty = append(a.messages.dirty, aMessage)
-						a.messages.dirtyCounter += 1
+						a.mdirty = append(a.mdirty, aMessage)
+						a.mdirtyCounter += 1
 						aMessage.Clear(DIRTY)
 					}
 					aMessage.Unlock()
 				}
 			}
-			if a.messages.dirtyCounter > 0 {
-				a.log(fmt.Sprintf("messageManager, dirty messages found [%d]", len(a.messages.dirty)))
+			if a.mdirtyCounter > 0 {
+				a.log(fmt.Sprintf("messageManager, dirty messages found [%d]", len(a.mdirty)))
 				select {
-				case a.MsgDBQ <- a.messages.dirty:
-					a.messages.dirty = make([]*Message, 0)
-					a.messages.dirtyCounter = 0
+				case a.MsgDBQ <- a.mdirty:
+					a.mdirty = make([]*Message, 0)
+					a.mdirtyCounter = 0
 				case <-time.After(2 * time.Second):
 					a.log("messageManager: database server blocked")
 				}
@@ -90,7 +88,7 @@ func (a *App) messageManager() {
 }
 
 func (a *App) presistMessage(messages []*Message) {
-	tx, err := a.DATABASE.Begin()
+	tx, err := a.Begin()
 	handleError(err)
 	a.log(fmt.Sprintf("presistMessage: Presisting %d messages ", len(messages)))
 	for i := 0; i < len(messages); i++ {
@@ -98,7 +96,7 @@ func (a *App) presistMessage(messages []*Message) {
 		m.RLock()
 
 		_, err := tx.Exec("INSERT OR REPLACE INTO messages (mid, topic ,Pic,parentid,status,stamp) VALUES (?,?,?,?,?,?)",
-			m.GetId(), m.GetTopic(), m.GetPic(), m.GetParentId(), m.Get(), 0)
+			m.GetUuid(), m.GetTopic(), m.GetPic(), m.GetParentId(), m.Get(), 0)
 		if err != nil {
 			tx.Rollback()
 		}

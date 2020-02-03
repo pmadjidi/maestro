@@ -14,11 +14,11 @@ import (
 
 
 type usersdb struct {
-	db map[string]*User
-	dirty []*User
-	locked []*User
-	dirtyCounter int64
-	lockedCounter int64
+	udb map[string]*User
+	udirty []*User
+	ulocked []*User
+	udirtyCounter int64
+	ulockedCounter int64
 }
 
 func newUserdb(sliceLimit int) *usersdb {
@@ -103,7 +103,7 @@ func newDatabase(cfg *AppConfig) * sql.DB{
 
 func (a *App) readUsersFromDatabase() {
 	a.log("Cashing user database")
-	rows, err := a.DATABASE.Query("SELECT users.uid, users.status,users.UserName,users.Password,users.FirstName," +
+	rows, err := a.Query("SELECT users.uid, users.status,users.UserName,users.Password,users.FirstName," +
 		"users.LastName,users.Email,users.Phone,users.Device, address.Zip,address.Street,address.City,address.State FROM users left  join address using(uid)   ")
 	handleError(err)
 	for rows.Next() {
@@ -118,37 +118,37 @@ func (a *App) readUsersFromDatabase() {
 		u.status.Set(uint(status))
 		if !u.status.Is(DELETED) {
 			//fmt.Printf("Reading user %+v\n",u)
-			a.users.db[u.UserName] = &u
+			a.udb[u.UserName] = &u
 		} else {
 			a.log(fmt.Sprintf("User %+v is marked deleted skipping", u))
 		}
 	}
-	a.log(fmt.Sprintf("%d users",len(a.users.db)))
+	a.log(fmt.Sprintf("%d users",len(a.udb)))
 }
 
 
 func (a *App) readMessagesFromDatabase() {
 	var messageCounter int
 	a.log("Cashing messaging database")
-	rows, err := a.DATABASE.Query("SELECT mid, topic ,Pic,parentid,status,stamp FROM messages")
+	rows, err := a.Query("SELECT mid, topic ,Pic,parentid,status,stamp FROM messages")
 	handleError(err)
 	for rows.Next() {
-		m := newMessage(&MsgReq{})[0]
+		m := newMessage(&MsgReq{})
 		var  status  int
 		var stamp int64
-		err = rows.Scan(&m.Id,&m.Topic,&m.Pic,&m.ParentId,&status,&stamp)
+		err = rows.Scan(&m.Uuid,&m.Topic,&m.Pic,&m.ParentId,&status,&stamp)
 		handleError(err)
 		m.Set(uint(status))
 		if !m.Is(DELETED) && m.Topic != ""{
-			a.log(fmt.Sprintf("Reading message %s",m.Id))
-			_,ok := a.messages.msg[m.Topic]
+			a.log(fmt.Sprintf("Reading message %s",m.Uuid))
+			_,ok := a.msg[m.Topic]
 			if !ok {
-				a.messages.msg[m.Topic] = make([]*Message,10)
+				a.msg[m.Topic] = make([]*Message,10)
 			}
-			a.messages.msg[m.Topic]= append(a.messages.msg[m.Topic],m)
+			a.msg[m.Topic]= append(a.msg[m.Topic],m)
 			messageCounter++
 		} else {
-			a.log(fmt.Sprintf("User %+v is marked deleted skipping", m.Id))
+			a.log(fmt.Sprintf("User %+v is marked deleted skipping", m.Uuid))
 		}
 	}
 	a.log(fmt.Sprintf("%d messages",messageCounter))

@@ -15,11 +15,12 @@ type registerEnvelope struct {
 	resp chan struct{}
 	token  *string
 	status Status
+	ctx * context.Context
 }
 
 
 func newRegisterEnvelope() *registerEnvelope {
-	return &registerEnvelope{make(chan *RegisterReq, 1), make(chan struct{}, 1),nil,Status_NEW}
+	return &registerEnvelope{make(chan *RegisterReq, 1), make(chan struct{}, 1),nil,Status_NEW,nil}
 }
 
 
@@ -30,7 +31,7 @@ type registerService struct {
 	system *Server
 }
 
-func (l *registerService) Name() string {
+func (l *registerService) getname() string {
 	return l.name
 }
 
@@ -104,6 +105,7 @@ func (r *registerService) Register(ctx context.Context, req *RegisterReq) (*Empt
 
 
 	env := newRegisterEnvelope()
+	env.ctx = &ctx
 	env.req <- req
 
 	select {

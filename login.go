@@ -33,7 +33,7 @@ func newLoginService(s *Server) *loginService {
 	return &loginService{&sync.RWMutex{}, "loginService", newMetrics(), s}
 }
 
-func (l *loginService) Name() string {
+func (l *loginService) getname() string {
 	return l.name
 }
 

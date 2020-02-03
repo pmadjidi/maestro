@@ -5,16 +5,22 @@ import "status.proto";
 import "google/protobuf/timestamp.proto";
 
 message MsgReq{
-    string id = 1;
-    string text = 2;
-    bytes pic = 3;
-    string parentId = 4;
-    string topic = 5;
-    google.protobuf.Timestamp time_name = 6;
-    Status status = 7;
+    string text = 1;
+    bytes pic = 2;
+    string parentId = 3;
+    string topic = 4;
+    google.protobuf.Timestamp time_name = 5;
+    Status status = 6;
+    string uuid = 7;
+}
+
+message MsgResp {
+    Status status = 1;
+    string uuid = 2;
 }
 
 
-service Message {
-    rpc Msg(stream MsgReq) returns (stream MsgReq);
+
+service Msg {
+    rpc put(stream MsgReq) returns (stream MsgResp);
 }

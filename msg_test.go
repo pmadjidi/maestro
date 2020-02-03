@@ -24,15 +24,15 @@ func registerArandomMessage(cfg *ServerConfig,token,appName string) error {
 	clientDeadline := time.Now().Add(30 * time.Second)
 	ctx, cancel := context.WithDeadline(context.Background(), clientDeadline)
 	defer cancel()
-	metadata.AppendToOutgoingContext(ctx,"bearer-bin",token,"app",appName)
+	ctx = metadata.AppendToOutgoingContext(ctx,"bearer-bin",token,"app",appName)
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
 	defer conn.Close()
-	c := NewMessageClient(conn)
+	c := NewMsgClient(conn)
 
-	stream, err := c.Msg(ctx)
+	stream, err := c.Put(ctx)
 	if err != nil {
 		return err
 	}
@@ -96,6 +96,8 @@ func Test_Msg(t *testing.T) {
 	token,app,err := createUser(postfix, "theRightPassword")
 	if err != nil {
 		t.Errorf("Should not fail creating a user.. %+v", err)
+	} else {
+		t.Logf("token[%s] app[%s]",token,app)
 	}
 
 	for i := 0; i < cfg.MAX_NUMBER_OF_TOPICS; i++ {
