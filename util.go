@@ -20,6 +20,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"time"
 )
 
 
@@ -187,6 +188,23 @@ func randomUsersForTests(size,systems int) [][]*RegisterReq{
 	return sys
 }
 
+/*
+type MsgReq struct {
+	Text                 string               `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
+	Pic                  []byte               `protobuf:"bytes,2,opt,name=pic,proto3" json:"pic,omitempty"`
+	ParentId             string               `protobuf:"bytes,3,opt,name=parentId,proto3" json:"parentId,omitempty"`
+	Topic                string               `protobuf:"bytes,4,opt,name=topic,proto3" json:"topic,omitempty"`
+	TimeName             *timestamp.Timestamp `protobuf:"bytes,5,opt,name=time_name,json=timeName,proto3" json:"time_name,omitempty"`
+	Status               Status               `protobuf:"varint,6,opt,name=status,proto3,enum=api.Status" json:"status,omitempty"`
+	Uuid                 string               `protobuf:"bytes,7,opt,name=uuid,proto3" json:"uuid,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
+	XXX_unrecognized     []byte               `json:"-"`
+	XXX_sizecache        int32                `json:"-"`
+}
+
+
+
+ */
 
 
 func randomMessageForTest(numberOfMessages,numberOfTopics int) []*MsgReq{
@@ -194,14 +212,16 @@ func randomMessageForTest(numberOfMessages,numberOfTopics int) []*MsgReq{
 	msgs := make([]*MsgReq,numberOfMessages)
 	for i := 0; i < numberOfMessages ; i++ {
 		newMsg := &MsgReq{
-			Uuid:     uuid.New().String(),
 			Text:     fmt.Sprintf("Message number [%d]",i),
 			Pic:      []byte(RandomString(100)),
 			ParentId:  uuid.New().String(),
 			Topic:    fmt.Sprintf("topic-%d",rangeRand(1,numberOfTopics)),
-			TimeName: &timestamp.Timestamp{},
+			TimeName: &timestamp.Timestamp{Seconds: int64(time.Now().Second()),},
+			Status: Status_NEW,
+			Uuid:     uuid.New().String(),
 		}
 		msgs = append(msgs,newMsg)
+		fmt.Printf("%+v\n",newMsg)
 	}
 	return msgs
 }

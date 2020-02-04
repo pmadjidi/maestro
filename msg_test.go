@@ -7,10 +7,9 @@ import (
 	. "maestro/api"
 	"sync"
 	"testing"
-	"time"
-
 	//	"time"
 	"context"
+	"fmt"
 )
 
 func Test_Msg(t *testing.T)  {
@@ -18,9 +17,9 @@ func Test_Msg(t *testing.T)  {
 	postfix := 10000
 	token, appName, err := createUser(postfix, "theRightPassword")
 	if err != nil {
-		t.Errorf("Should not fail creating a user.. %+v", err)
+		t.Errorf("Should not fail creating a user.. %+v\n", err)
 	} else {
-		t.Logf("token[%s] app[%s]", token, appName)
+		fmt.Printf("token[%s] app[%s]\n", token, appName)
 	}
 
 	cfg := createAppConfig(createServerConfig(), appName)
@@ -30,10 +29,6 @@ func Test_Msg(t *testing.T)  {
 	sendFail = make(chan *error, numberOfMessages)
 	reciveFail = make(chan *error, numberOfMessages)
 
-	clientDeadline := time.Now().Add(3 * time.Second)
-	ctx, cancel := context.WithDeadline(context.Background(), clientDeadline)
-	defer cancel()
-	ctx = metadata.AppendToOutgoingContext(ctx, "bearer-bin", token, "app", appName)
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		t.Logf(err.Error())
@@ -44,14 +39,15 @@ func Test_Msg(t *testing.T)  {
 
 	msgs := randomMessageForTest(cfg.MAX_NUMBER_OF_MESSAGES_PER_TOPIC, cfg.MAX_NUMBER_OF_TOPICS)
 
-	/*
-	for _,m := range msgs {
-		PrettyPrint(m)
-	}
 
-	 */
+	fmt.Printf("Before stream")
 
-	t.Log("Before stream")
+
+	//ctx, _ := context.WithTimeout(context.Background(),10 * time.Second)
+	ctx := context.Background()
+	ctx = metadata.AppendToOutgoingContext(ctx, "bearer-bin", token, "app", appName)
+	//defer cancel()
+
 
 	stream, err := c.Put(ctx)
 	if err != nil {
@@ -59,64 +55,67 @@ func Test_Msg(t *testing.T)  {
 		t.Fail()
 	}
 
-	t.Log("After stream")
+	fmt.Printf("After stream\n")
 
 	var wg sync.WaitGroup
-	wg.Add(1)
+	wg.Add(2)
 
-	t.Log("Before go functions")
+	fmt.Printf("Before go functions\n")
 
 	go func() {
 		defer wg.Done()
-		t.Log("In go function for send")
+		fmt.Printf("In go function for send\n")
 		for _, m := range msgs {
+			fmt.Printf("tick\n")
 			err := stream.Send(m)
 			if err != nil {
+				fmt.Printf("Send Error [%s]\n",err.Error())
 				sendFail <- &err
-				break
+				close(sendFail)
+				return
 			}
-			t.Logf("sending Message[%s]",m.Uuid)
+			fmt.Printf("sending Message[%s]\n",m.Uuid)
 		}
-		close(sendFail)
 	}()
 
-	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		t.Log("In go function for Rec")
-	loop:
+		fmt.Printf("In go function for Rec\n")
 		for {
+			fmt.Printf("tack\n")
 			q, err := stream.Recv()
 			if err != nil {
 				if err == io.EOF {
-					break loop
+					close(reciveFail)
+					return
+				} else {
+					reciveFail <- &err
 				}
-				reciveFail <- &err
 			} else {
-				t.Logf("Recieved Status[%s] for Message[%s]", q.Status.String(), q.Uuid)
+				fmt.Printf("Recieved Status[%s] for Message[%s]\n", q.Status.String(), q.Uuid)
 			}
 		}
 		close(reciveFail)
 	}()
 
-	t.Log("Waiting for go functions to terminate")
+	fmt.Printf("Waiting for go functions to terminate\n")
 
 	wg.Wait()
 
 	for e := range sendFail {
 		if e != nil {
 			t.Logf(err.Error())
-			t.Fail()
+			t.Fatal()
 		}
 	}
 
 	for e := range reciveFail {
 		if e != nil {
 			t.Logf(err.Error())
-			t.Fail()
+			t.Fatal()
 		}
 	}
 
-	t.Logf("Success")
+	fmt.Printf("Success\n")
 
 }

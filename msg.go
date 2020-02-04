@@ -74,7 +74,6 @@ func (m *msgService) Put(srv Msg_PutServer ) error {
 	PrettyPrint(md)
 	if val {
 		appName = md.Get("app")
-		PrettyPrint(appName)
 		if len(appName) < 1 && appName[0] != "" {
 			return fmt.Errorf(Status_INVALID_APPNAME.String())
 		}
@@ -82,123 +81,63 @@ func (m *msgService) Put(srv Msg_PutServer ) error {
 		return fmt.Errorf(Status_NOAUTH.String())
 	}
 
-	app, err := m.system.GetOrCreateApp(appName[0], false)
+	app,err :=  m.system.GetOrCreateApp(appName[0],false)
 	if err != nil {
+		m.system.log(err.Error())
 		return err
 	}
 
+
+	m.system.log("Before loop")
 	for {
+
 
 		// exit if context is done
 		// or continue
+		/*
 		select {
 		case <-ctx.Done():
+			m.system.log("CTX timeout")
 			return ctx.Err()
 		default:
 		}
 
+		 */
+
 		// receive data from stream
 		req, err := srv.Recv()
+
 		if err == io.EOF {
 			// return will close stream from server side
-			log.Println("exit")
+			m.system.log("Put got EOF")
 			return nil
 		}
+
 		if err != nil {
-			log.Printf("receive error %v", err)
-			continue
+			m.system.log(fmt.Sprintf("receive error [%s]",err.Error()))
+			return nil
 		}
 
 		m.system.log(fmt.Sprintf("Recived message [%s][%s]", req.Uuid, req.Topic))
-		m := newMessage(req)
+		newMsg := newMessage(req)
 		e := newMsgEnvelope()
-		e.messages = append(e.messages, m)
+		e.messages = append(e.messages, newMsg)
+
 
 		app.msgRecQ <- e
 		<-e.resp
 
+		m.system.log("After <-e.resp")
+
 		if err := srv.Send(&MsgResp{Status: e.Status, Uuid: e.messages[0].Uuid}); err != nil {
 			log.Printf("send error %v", err)
+			continue
 		}
 
+
 	}
-
-}
-
-
-/*
-func (m *msgService) oldPut(srv Msg_PutServer ) error {
-	m.system.log("Called put...")
-
-	var appName []string
-	ctx := srv.Context()
-
-	md, val := metadata.FromIncomingContext(ctx)
-	PrettyPrint(md)
-	if val {
-		appName = md.Get("app")
-		PrettyPrint(appName)
-		if len(appName) < 1 && appName[0] != "" {
-			return fmt.Errorf(Status_INVALID_APPNAME.String())
-		}
-	} else {
-		return fmt.Errorf(Status_NOAUTH.String())
-	}
-
-	app, err := m.system.GetOrCreateApp(appName[0], false)
-	if err != nil {
-		return err
-	}
-
-loop:
-	for {
-		// exit if context is done
-		// or continue
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-			// receive data from stream
-			req, err := srv.Recv()
-			if err == io.EOF {
-				// return will close stream from server side
-				m.system.log("Exiting put")
-				break loop
-			}
-			if err != nil {
-				m.system.log(fmt.Sprintf("Error [%s][%s][%s]",req.Uuid,req.Topic,err.Error()))
-				return err
-			}
-
-			m.system.log(fmt.Sprintf("Recived message [%s][%s]",req.Uuid,req.Topic))
-
-			m := newMessage(req)
-			e := newMsgEnvelope()
-
-			e.messages = append(e.messages, m)
-
-			select {
-			case app.msgRecQ <- e:
-			case <-ctx.Done():
-				return ctx.Err()
-			}
-
-			select {
-			case <-e.resp:
-				if e.Status == Status_SUCCESS {
-					srv.Send(&MsgResp{Status: e.Status,Uuid: e.messages[0].Uuid})
-				} else {
-					return fmt.Errorf(e.Status.String())
-				}
-			case <-time.After(time.Second):
-				return fmt.Errorf("Connection with grpc client is broken, timeout...")
-			}
-
-		}
-	}
-
 	return nil
+
 }
 
- */
 

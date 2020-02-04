@@ -79,6 +79,8 @@ func (s *Server) GetOrCreateApp(appName string, create bool) (*App, error) {
 	if app == nil && create {
 		return nil, fmt.Errorf(Status_EXITSTS.String())
 	}
+
+	s.log("In GetOrCreateApp")
 	return app, nil
 }
 

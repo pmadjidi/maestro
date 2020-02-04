@@ -32,7 +32,7 @@ func (s *Server) processCreateApp(req *appEnvelope) {
 		s.apps[appName] = app
 		s.status[appName] = NewFlag()
 		s.status[appName].Set(NEW)
-		go app.start()
+		app.start()
 		req.app <- app
 	} else {
 		s.log(fmt.Sprintf("Failed to create App [%s]", req.appName))
