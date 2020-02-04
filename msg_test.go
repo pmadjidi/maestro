@@ -64,25 +64,26 @@ func Test_Msg(t *testing.T)  {
 
 	go func() {
 		defer wg.Done()
+		defer stream.CloseSend()
+
 		fmt.Printf("In go function for send\n")
 		for _, m := range msgs {
-			fmt.Printf("tick\n")
 			err := stream.Send(m)
-			if err != nil {
+			if err != nil && err != io.EOF {
 				fmt.Printf("Send Error [%s]\n",err.Error())
 				sendFail <- &err
 				close(sendFail)
 				return
 			}
-			fmt.Printf("sending Message[%s]\n",m.Uuid)
+			fmt.Printf("sending Message[%s][%s]\n",m.Uuid,m.Topic)
 		}
+		fmt.Printf("Returning from go send function")
 	}()
 
 	go func() {
 		defer wg.Done()
 		fmt.Printf("In go function for Rec\n")
 		for {
-			fmt.Printf("tack\n")
 			q, err := stream.Recv()
 			if err != nil {
 				if err == io.EOF {

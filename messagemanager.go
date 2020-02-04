@@ -9,12 +9,12 @@ import (
 func (a *App) messageManager() {
 	signalmsgReQ := false
 	a.log("messageManager, Entering processing loop")
-	loop:
+loop:
 	for {
 		select {
 		case env, ok := <-a.msgRecQ:
 			if ok {
-					for _,m := range env.messages {
+				for _, m := range env.messages {
 					_, ok := a.msg[m.Topic]
 					if !ok {
 						if len(a.msg) < a.cfg.MAX_NUMBER_OF_TOPICS {
@@ -24,36 +24,32 @@ func (a *App) messageManager() {
 							env.resp <- notify{}
 							continue
 						}
-
-						if len(a.msg[m.Topic]) < a.cfg.MAX_NUMBER_OF_MESSAGES_PER_TOPIC  {
-							m.Set(DIRTY)
-							a.msg[m.Topic][m.Uuid] = m
-							subscriptions, ok := a.subscriptions[m.Topic]
-							if ok {
-								for _, user := range subscriptions {
-									user.Lock()
-									user.timeLine = append(user.timeLine, m)
-									user.status.Set(DIRTY)
-									user.Unlock()
-								}
-							}
-							env.Status = Status_SUCCESS
-						} else {
-							env.Status = Status_MAXIMUN_NUMBER_OF_MESSAGES_PEER_TOPIC_REACHED
-							env.resp <- notify{}
-							continue
-						}
 					}
+
+					if len(a.msg[m.Topic]) < a.cfg.MAX_NUMBER_OF_MESSAGES_PER_TOPIC {
+						m.Set(DIRTY)
+						a.msg[m.Topic][m.Uuid] = m
+						subscriptions, ok := a.subscriptions[m.Topic]
+						if ok {
+							for _, user := range subscriptions {
+								user.Lock()
+								user.timeLine = append(user.timeLine, m)
+								user.status.Set(DIRTY)
+								user.Unlock()
+							}
+						}
+						env.Status = Status_SUCCESS
+					} else {
+						env.Status = Status_MAXIMUN_NUMBER_OF_MESSAGES_PEER_TOPIC_REACHED
+					}
+					env.resp <- notify{}
 				}
-				//fmt.Printf("messageManager status is %s\n",res.Status.String())
 			} else {
 				signalmsgReQ = true
 				if signalmsgReQ {
 					break loop
 				}
 			}
-
-
 
 		case <-time.After(a.cfg.WRITE_LATENCY * time.Millisecond):
 			//fmt.Printf("messageManager: Looking for changes in message database...\n")

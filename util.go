@@ -209,14 +209,14 @@ type MsgReq struct {
 
 func randomMessageForTest(numberOfMessages,numberOfTopics int) []*MsgReq{
 
-	msgs := make([]*MsgReq,numberOfMessages)
+	msgs := make([]*MsgReq,0)
 	for i := 0; i < numberOfMessages ; i++ {
 		newMsg := &MsgReq{
 			Text:     fmt.Sprintf("Message number [%d]",i),
-			Pic:      []byte(RandomString(100)),
+			Pic:      []byte(RandomString(1000)),
 			ParentId:  uuid.New().String(),
 			Topic:    fmt.Sprintf("topic-%d",rangeRand(1,numberOfTopics)),
-			TimeName: &timestamp.Timestamp{Seconds: int64(time.Now().Second()),},
+			TimeName: &timestamp.Timestamp{Seconds: time.Now().Unix(),},
 			Status: Status_NEW,
 			Uuid:     uuid.New().String(),
 		}

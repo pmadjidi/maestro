@@ -8,12 +8,13 @@ import (
 	"log"
 	. "maestro/api"
 	"sync"
+	"time"
 )
 
 type notify struct{}
 
 type msgEnvelope struct {
-	messages  []*Message
+	messages []*Message
 	resp     chan notify
 	userName string
 	Status
@@ -27,13 +28,13 @@ type Message struct {
 }
 
 func newMessage(msgreq *MsgReq) *Message {
-	m := &Message{uuid.New().String(),msgreq, &sync.RWMutex{}, NewFlag()}
+	m := &Message{uuid.New().String(), msgreq, &sync.RWMutex{}, NewFlag()}
 	return m
 }
 
 type messagesdb struct {
-	msg            map[string]map[string]*Message
-	subscriptions  map[string][]*User
+	msg             map[string]map[string]*Message
+	subscriptions   map[string][]*User
 	mdirty          []*Message
 	mblocked        []*Message
 	mdirtyCounter   int64
@@ -64,7 +65,7 @@ func newMsgService(s *Server) *msgService {
 	return &msgService{"msgService", newMetrics(), s}
 }
 
-func (m *msgService) Put(srv Msg_PutServer ) error {
+func (m *msgService) Put(srv Msg_PutServer) error {
 	m.system.log("Called put...")
 
 	var appName []string
@@ -81,28 +82,24 @@ func (m *msgService) Put(srv Msg_PutServer ) error {
 		return fmt.Errorf(Status_NOAUTH.String())
 	}
 
-	app,err :=  m.system.GetOrCreateApp(appName[0],false)
+	app, err := m.system.GetOrCreateApp(appName[0], false)
 	if err != nil {
 		m.system.log(err.Error())
 		return err
 	}
 
-
 	m.system.log("Before loop")
 	for {
 
-
 		// exit if context is done
 		// or continue
-		/*
+
 		select {
 		case <-ctx.Done():
 			m.system.log("CTX timeout")
 			return ctx.Err()
 		default:
 		}
-
-		 */
 
 		// receive data from stream
 		req, err := srv.Recv()
@@ -114,8 +111,8 @@ func (m *msgService) Put(srv Msg_PutServer ) error {
 		}
 
 		if err != nil {
-			m.system.log(fmt.Sprintf("receive error [%s]",err.Error()))
-			return nil
+			m.system.log(fmt.Sprintf("receive error [%s]", err.Error()))
+			continue
 		}
 
 		m.system.log(fmt.Sprintf("Recived message [%s][%s]", req.Uuid, req.Topic))
@@ -123,21 +120,25 @@ func (m *msgService) Put(srv Msg_PutServer ) error {
 		e := newMsgEnvelope()
 		e.messages = append(e.messages, newMsg)
 
-
-		app.msgRecQ <- e
-		<-e.resp
-
-		m.system.log("After <-e.resp")
-
-		if err := srv.Send(&MsgResp{Status: e.Status, Uuid: e.messages[0].Uuid}); err != nil {
-			log.Printf("send error %v", err)
-			continue
+		select {
+		case app.msgRecQ <- e:
+		default:
 		}
 
+		select {
+		case <-e.resp:
+			if err := srv.Send(&MsgResp{Status: e.Status, Uuid: e.messages[0].Uuid}); err != nil {
+				log.Printf("send error %v", err)
+				continue
+			}
+		case <-time.After(m.system.cfg.SYSTEM_QUEUE_WAIT_BEFORE_TIME_OUT):
+			if err := srv.Send(&MsgResp{Status: Status_TIMEOUT, Uuid: e.messages[0].Uuid}); err != nil {
+				log.Printf("send error %v", err)
+				continue
+			}
+		}
 
 	}
 	return nil
 
 }
-
-
