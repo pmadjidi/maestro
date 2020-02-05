@@ -32,9 +32,6 @@ func TestRegisterMaxNumberOfUsers(t *testing.T) {
 	defer conn.Close()
 	c := NewRegisterClient(conn)
 	//cfg := createServerConfig()
-
-
-
 	req := randomUsersForTests(1000, 1000)
 
 	var wg sync.WaitGroup

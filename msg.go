@@ -48,7 +48,7 @@ func newMessageDb() *messagesdb {
 }
 
 func newMsgEnvelope() *msgEnvelope {
-	return &msgEnvelope{nil, make(chan notify), "", Status_NEW}
+	return &msgEnvelope{nil, make(chan notify,1), "", Status_NEW}
 }
 
 type msgService struct {
@@ -103,7 +103,6 @@ func (m *msgService) Put(srv Msg_PutServer) error {
 
 		// receive data from stream
 		req, err := srv.Recv()
-
 		if err == io.EOF {
 			// return will close stream from server side
 			m.system.log("Put got EOF")
@@ -112,7 +111,7 @@ func (m *msgService) Put(srv Msg_PutServer) error {
 
 		if err != nil {
 			m.system.log(fmt.Sprintf("receive error [%s]", err.Error()))
-			continue
+			return err
 		}
 
 		m.system.log(fmt.Sprintf("Recived message [%s][%s]", req.Uuid, req.Topic))
@@ -128,17 +127,17 @@ func (m *msgService) Put(srv Msg_PutServer) error {
 		select {
 		case <-e.resp:
 			if err := srv.Send(&MsgResp{Status: e.Status, Uuid: e.messages[0].Uuid}); err != nil {
-				log.Printf("send error %v", err)
-				continue
+				return fmt.Errorf(Status_ERROR.String())
 			}
 		case <-time.After(m.system.cfg.SYSTEM_QUEUE_WAIT_BEFORE_TIME_OUT):
 			if err := srv.Send(&MsgResp{Status: Status_TIMEOUT, Uuid: e.messages[0].Uuid}); err != nil {
 				log.Printf("send error %v", err)
-				continue
 			}
 		}
-
 	}
+
+	m.system.log("Returning from put")
+
 	return nil
 
 }

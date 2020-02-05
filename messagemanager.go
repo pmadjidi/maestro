@@ -42,8 +42,8 @@ loop:
 					} else {
 						env.Status = Status_MAXIMUN_NUMBER_OF_MESSAGES_PEER_TOPIC_REACHED
 					}
-					env.resp <- notify{}
 				}
+				env.resp <- notify{}
 			} else {
 				signalmsgReQ = true
 				if signalmsgReQ {

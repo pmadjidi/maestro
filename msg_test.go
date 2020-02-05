@@ -12,7 +12,7 @@ import (
 	"fmt"
 )
 
-func Test_Msg(t *testing.T)  {
+func Test_Msg(t *testing.T) {
 
 	postfix := 10000
 	token, appName, err := createUser(postfix, "theRightPassword")
@@ -39,21 +39,19 @@ func Test_Msg(t *testing.T)  {
 
 	msgs := randomMessageForTest(cfg.MAX_NUMBER_OF_MESSAGES_PER_TOPIC, cfg.MAX_NUMBER_OF_TOPICS)
 
-
 	fmt.Printf("Before stream")
-
 
 	//ctx, _ := context.WithTimeout(context.Background(),10 * time.Second)
 	ctx := context.Background()
 	ctx = metadata.AppendToOutgoingContext(ctx, "bearer-bin", token, "app", appName)
 	//defer cancel()
 
-
 	stream, err := c.Put(ctx)
 	if err != nil {
 		t.Logf(err.Error())
 		t.Fail()
 	}
+	defer stream.CloseSend()
 
 	fmt.Printf("After stream\n")
 
@@ -64,58 +62,61 @@ func Test_Msg(t *testing.T)  {
 
 	go func() {
 		defer wg.Done()
+		defer close(sendFail)
 		defer stream.CloseSend()
-
 		fmt.Printf("In go function for send\n")
 		for _, m := range msgs {
 			err := stream.Send(m)
 			if err != nil && err != io.EOF {
-				fmt.Printf("Send Error [%s]\n",err.Error())
+				fmt.Printf("Send Error [%s]\n", err.Error())
 				sendFail <- &err
-				close(sendFail)
 				return
 			}
-			fmt.Printf("sending Message[%s][%s]\n",m.Uuid,m.Topic)
+			fmt.Printf("Sent Message[%s][%s]\n", m.Uuid, m.Topic)
 		}
 		fmt.Printf("Returning from go send function")
 	}()
 
 	go func() {
 		defer wg.Done()
+		defer close(reciveFail)
 		fmt.Printf("In go function for Rec\n")
 		for {
 			q, err := stream.Recv()
-			if err != nil {
+
+			if err != nil  {
+				fmt.Printf("Recive Error Client [%s]\n", err.Error())
 				if err == io.EOF {
-					close(reciveFail)
 					return
-				} else {
-					reciveFail <- &err
 				}
+				reciveFail <- &err
+				return
 			} else {
 				fmt.Printf("Recieved Status[%s] for Message[%s]\n", q.Status.String(), q.Uuid)
 			}
 		}
-		close(reciveFail)
 	}()
 
 	fmt.Printf("Waiting for go functions to terminate\n")
 
 	wg.Wait()
 
-	for e := range sendFail {
-		if e != nil {
-			t.Logf(err.Error())
-			t.Fatal()
-		}
-	}
 
-	for e := range reciveFail {
-		if e != nil {
-			t.Logf(err.Error())
-			t.Fatal()
+		for e := range sendFail {
+			if e != nil {
+				t.Logf(err.Error())
+				t.Fatal()
+			}
 		}
-	}
+
+		for e := range reciveFail {
+			if e != nil {
+				t.Logf(err.Error())
+				t.Fatal()
+			}
+		}
+
+
 
 	fmt.Printf("Success\n")
 
