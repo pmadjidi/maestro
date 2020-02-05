@@ -39,8 +39,8 @@ func TestLoginFail(t *testing.T) {
 		ctx1,
 		loginReq,
 	)
-	if err != nil {
-		t.Errorf("could not authenticate %+v", err)
+	if err == nil  {
+		t.Errorf("expext Invalid username %+v", err)
 		t.Fail()
 	}
 }
