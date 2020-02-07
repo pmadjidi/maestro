@@ -17,6 +17,9 @@ type appCommands struct {
 	registerQ chan *registerEnvelope
 	msgSendQ      chan *msgEnvelope
 	msgRecQ      chan *msgEnvelope
+	topicSub     chan *topicEnvelope
+	topicUnSub    chan *topicEnvelope
+	topicList chan *topicEnvelope
 	UserDbQ   chan []*User
 	MsgDBQ    chan []*Message
 }
@@ -27,6 +30,9 @@ func newAppCommands(cfg *ServerConfig) *appCommands {
 		make(chan *registerEnvelope, cfg.SERVER_QEUEU_LENGTH),
 		make(chan *msgEnvelope, cfg.SERVER_QEUEU_LENGTH),
 		make(chan *msgEnvelope, cfg.SERVER_QEUEU_LENGTH),
+		make(chan *topicEnvelope, cfg.SERVER_QEUEU_LENGTH),
+		make(chan *topicEnvelope, cfg.SERVER_QEUEU_LENGTH),
+		make(chan *topicEnvelope, cfg.SERVER_QEUEU_LENGTH),
 		make(chan []*User, cfg.SERVER_QEUEU_LENGTH),
 		make(chan []*Message, cfg.SERVER_QEUEU_LENGTH),
 	}
@@ -96,6 +102,8 @@ func (a *App) StopLoginService() {
 	close(a.loginQ)
 	close(a.registerQ)
 	close(a.msgSendQ)
+	close(a.topicUnSub)
+	close(a.topicSub)
 	a.log("Stoping user manger")
 }
 

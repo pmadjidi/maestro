@@ -35,6 +35,8 @@ func (a *App) userManager() {
 	signalLoginQ := false
 	signalRegisterQ := false
 	signalMegSendQ := false
+	signalTopicSub := false
+	signalTopicUnSub := false
 
 loop:
 	for {
@@ -110,6 +112,19 @@ loop:
 				signalRegisterQ = true
 			}
 
+		case env, ok := <-a.topicSub:
+			if ok {
+				PrettyPrint(env)
+			} else {
+				signalTopicSub = true
+			}
+		case env, ok := <-a.topicUnSub:
+			if ok {
+				PrettyPrint(env)
+			} else {
+				signalTopicUnSub = true
+			}
+
 		case env, ok := <-a.msgSendQ:
 			if ok {
 				aUser, ok := a.udb[env.userName]
@@ -122,7 +137,7 @@ loop:
 				env.resp <- notify{}
 			} else {
 				signalMegSendQ = true
-				if signalLoginQ && signalRegisterQ && signalMegSendQ {
+				if signalLoginQ && signalRegisterQ && signalMegSendQ && signalTopicSub && signalTopicUnSub {
 					break loop
 				}
 			}

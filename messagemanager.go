@@ -74,8 +74,6 @@ loop:
 					a.log("messageManager: database server blocked")
 				}
 			}
-
-
 		case <-a.quit:
 			break loop
 		}

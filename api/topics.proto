@@ -1,0 +1,33 @@
+syntax = "proto3";
+package api;
+
+import "status.proto";
+import "register.proto";
+
+message Topic{
+    string id = 1;
+    string tag = 2;
+    Status status = 3;
+}
+
+
+message Topics{
+    repeated Topic list = 1;
+}
+
+
+message TopicReq{
+    Topics list = 1;
+}
+
+
+message TopicResp{
+    Topics list = 1;
+}
+
+service Subscriptions {
+    rpc sub(TopicReq) returns (TopicResp);
+    rpc unsub(TopicReq) returns (TopicResp);
+    rpc list(Empty) returns (TopicResp);
+
+}
