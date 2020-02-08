@@ -91,7 +91,9 @@ loop:
 						} else {
 							a.subscriptions[t.Tag] = append(make([]*User, 0), newEnv.User)
 						}
+						t.Status = Status_SUCCESS
 					}
+					env.Status = Status_SUCCESS
 				} else {
 					env.Status = newEnv.Status
 				}
@@ -117,7 +119,9 @@ loop:
 								}
 							}
 						}
+						t.Status = Status_SUCCESS
 					}
+					env.Status = Status_SUCCESS
 				} else {
 					env.Status = newEnv.Status
 				}

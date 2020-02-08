@@ -137,8 +137,8 @@ loop:
 				} else {
 					env.Status = Status_SUCCESS
 					env.User = aUser
-					env.resp <- notify{}
 				}
+				env.resp <- notify{}
 			} else {
 				signalUserQ = true
 			}

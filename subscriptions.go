@@ -72,7 +72,7 @@ func (t *topicService) Sub(ctx context.Context, req *TopicReq) (*TopicResp, erro
 		return nil,fmt.Errorf(env.Status.String())
 	}
 
-	return &TopicResp{List: env.List},nil
+	return &TopicResp{List: env.List,},nil
 }
 
 func (t *topicService) Unsub(ctx context.Context, req *TopicReq) (*TopicResp, error) {
