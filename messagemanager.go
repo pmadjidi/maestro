@@ -8,11 +8,13 @@ import (
 
 func (a *App) messageManager() {
 	signalmsgReQ := false
+	signalTopicSub := false
+	signalTopicUnSub := false
 	a.log("messageManager, Entering processing loop")
 loop:
 	for {
 		select {
-		case env, ok := <-a.msgRecQ:
+		case env, ok := <-a.msgQ:
 			if ok {
 				for _, m := range env.messages {
 					_, ok := a.msg[m.Topic]
@@ -46,7 +48,7 @@ loop:
 				env.resp <- notify{}
 			} else {
 				signalmsgReQ = true
-				if signalmsgReQ {
+				if signalmsgReQ && signalTopicSub && signalTopicUnSub{
 					break loop
 				}
 			}
@@ -74,6 +76,33 @@ loop:
 					a.log("messageManager: database server blocked")
 				}
 			}
+
+		case env, ok := <-a.topicSubQ:
+			if ok {
+				newEnv := newUserEnvelope()
+				newEnv.Name = env.Username
+				a.userQ <- newEnv
+				<- newEnv.resp
+				for _,t := range env.List {
+					_ ,ok :=  a.subscriptions[t.Tag]
+					if ok {
+						a.subscriptions[t.Tag] = append(a.subscriptions[t.Tag],newEnv.User)
+					} else {
+						a.subscriptions[t.Tag] = append(make([]*User,0),newEnv.User)
+					}
+				}
+				env.resp <- notify{}
+			} else {
+				signalTopicSub = true
+			}
+		case env, ok := <-a.topicUnSubQ:
+			if ok {
+				
+				env.resp <- notify{}
+			} else {
+				signalTopicUnSub = true
+			}
+
 		case <-a.quit:
 			break loop
 		}

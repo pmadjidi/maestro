@@ -65,34 +65,9 @@ class Topic extends $pb.GeneratedMessage {
   void clearStatus() => clearField(3);
 }
 
-class Topics extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo('Topics', package: const $pb.PackageName('api'), createEmptyInstance: create)
-    ..pc<Topic>(1, 'list', $pb.PbFieldType.PM, subBuilder: Topic.create)
-    ..hasRequiredFields = false
-  ;
-
-  Topics._() : super();
-  factory Topics() => create();
-  factory Topics.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Topics.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-  Topics clone() => Topics()..mergeFromMessage(this);
-  Topics copyWith(void Function(Topics) updates) => super.copyWith((message) => updates(message as Topics));
-  $pb.BuilderInfo get info_ => _i;
-  @$core.pragma('dart2js:noInline')
-  static Topics create() => Topics._();
-  Topics createEmptyInstance() => create();
-  static $pb.PbList<Topics> createRepeated() => $pb.PbList<Topics>();
-  @$core.pragma('dart2js:noInline')
-  static Topics getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Topics>(create);
-  static Topics _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.List<Topic> get list => $_getList(0);
-}
-
 class TopicReq extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo('TopicReq', package: const $pb.PackageName('api'), createEmptyInstance: create)
-    ..aOM<Topics>(1, 'list', subBuilder: Topics.create)
+    ..pc<Topic>(1, 'list', $pb.PbFieldType.PM, subBuilder: Topic.create)
     ..hasRequiredFields = false
   ;
 
@@ -112,20 +87,12 @@ class TopicReq extends $pb.GeneratedMessage {
   static TopicReq _defaultInstance;
 
   @$pb.TagNumber(1)
-  Topics get list => $_getN(0);
-  @$pb.TagNumber(1)
-  set list(Topics v) { setField(1, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasList() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearList() => clearField(1);
-  @$pb.TagNumber(1)
-  Topics ensureList() => $_ensure(0);
+  $core.List<Topic> get list => $_getList(0);
 }
 
 class TopicResp extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo('TopicResp', package: const $pb.PackageName('api'), createEmptyInstance: create)
-    ..aOM<Topics>(1, 'list', subBuilder: Topics.create)
+    ..pc<Topic>(1, 'list', $pb.PbFieldType.PM, subBuilder: Topic.create)
     ..hasRequiredFields = false
   ;
 
@@ -145,15 +112,7 @@ class TopicResp extends $pb.GeneratedMessage {
   static TopicResp _defaultInstance;
 
   @$pb.TagNumber(1)
-  Topics get list => $_getN(0);
-  @$pb.TagNumber(1)
-  set list(Topics v) { setField(1, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasList() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearList() => clearField(1);
-  @$pb.TagNumber(1)
-  Topics ensureList() => $_ensure(0);
+  $core.List<Topic> get list => $_getList(0);
 }
 
 class SubscriptionsApi {

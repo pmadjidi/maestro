@@ -16,24 +16,17 @@ const Topic$json = const {
   ],
 };
 
-const Topics$json = const {
-  '1': 'Topics',
-  '2': const [
-    const {'1': 'list', '3': 1, '4': 3, '5': 11, '6': '.api.Topic', '10': 'list'},
-  ],
-};
-
 const TopicReq$json = const {
   '1': 'TopicReq',
   '2': const [
-    const {'1': 'list', '3': 1, '4': 1, '5': 11, '6': '.api.Topics', '10': 'list'},
+    const {'1': 'list', '3': 1, '4': 3, '5': 11, '6': '.api.Topic', '10': 'list'},
   ],
 };
 
 const TopicResp$json = const {
   '1': 'TopicResp',
   '2': const [
-    const {'1': 'list', '3': 1, '4': 1, '5': 11, '6': '.api.Topics', '10': 'list'},
+    const {'1': 'list', '3': 1, '4': 3, '5': 11, '6': '.api.Topic', '10': 'list'},
   ],
 };
 
@@ -48,7 +41,6 @@ const SubscriptionsServiceBase$json = const {
 
 const SubscriptionsServiceBase$messageJson = const {
   '.api.TopicReq': TopicReq$json,
-  '.api.Topics': Topics$json,
   '.api.Topic': Topic$json,
   '.api.TopicResp': TopicResp$json,
   '.api.Empty': $3.Empty$json,

@@ -34,10 +34,8 @@ func (a *App) userManager() {
 	a.log("LoginServer, Entering processing loop")
 	signalLoginQ := false
 	signalRegisterQ := false
-	signalMegSendQ := false
-	signalTopicSub := false
-	signalTopicUnSub := false
-
+	signalTimeLineQ := false
+	signalUserQ := false
 loop:
 	for {
 		select {
@@ -112,20 +110,9 @@ loop:
 				signalRegisterQ = true
 			}
 
-		case env, ok := <-a.topicSub:
-			if ok {
-				PrettyPrint(env)
-			} else {
-				signalTopicSub = true
-			}
-		case env, ok := <-a.topicUnSub:
-			if ok {
-				PrettyPrint(env)
-			} else {
-				signalTopicUnSub = true
-			}
 
-		case env, ok := <-a.msgSendQ:
+
+		case env, ok := <-a.timeLineQ:
 			if ok {
 				aUser, ok := a.udb[env.userName]
 				if !ok {
@@ -136,10 +123,23 @@ loop:
 				}
 				env.resp <- notify{}
 			} else {
-				signalMegSendQ = true
-				if signalLoginQ && signalRegisterQ && signalMegSendQ && signalTopicSub && signalTopicUnSub {
+				signalTimeLineQ = true
+				if signalLoginQ && signalRegisterQ && signalTimeLineQ && signalUserQ {
 					break loop
 				}
+			}
+
+		case env, ok := <-a.userQ:
+			if ok {
+				aUser, ok := a.udb[env.Name]
+				if !ok {
+					env.Status = Status_INVALID_USERNAME
+				} else {
+					env.User = aUser
+					env.resp <- notify{}
+				}
+			} else {
+				signalUserQ = true
 			}
 
 		case <-a.quit:

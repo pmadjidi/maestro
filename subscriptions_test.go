@@ -45,7 +45,7 @@ func Test_Subscriptions(t *testing.T) {
 
 	//ctx, _ := context.WithTimeout(context.Background(),10 * time.Second)
 	ctx := context.Background()
-	ctx = metadata.AppendToOutgoingContext(ctx, "bearer-bin", token, "app", appName)
+	ctx = metadata.AppendToOutgoingContext(ctx, "bearer-bin", token)
 
 	resp,err := c.Sub(ctx,&TopicReq{List: &Topics{List: ts}})
 

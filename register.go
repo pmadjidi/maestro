@@ -10,18 +10,6 @@ import (
 	"sync"
 )
 
-type registerEnvelope struct {
-	req  chan *RegisterReq
-	resp chan struct{}
-	token  *string
-	status Status
-	ctx * context.Context
-}
-
-
-func newRegisterEnvelope() *registerEnvelope {
-	return &registerEnvelope{make(chan *RegisterReq, 1), make(chan struct{}, 1),nil,Status_NEW,nil}
-}
 
 
 type registerService struct {

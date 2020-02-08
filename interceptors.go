@@ -46,11 +46,8 @@ func createUniaryInterCeptor(cfg *ServerConfig) grpc.UnaryServerInterceptor {
 			if err != nil {
 				return nil,err
 			}
-			PrettyPrint(token)
-
 			ctx = context.WithValue(ctx, "appName", token["appname"])
 			ctx = context.WithValue(ctx, "userName", token["username"])
-
 			}
 
 		m, err := handler(ctx, req)

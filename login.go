@@ -9,18 +9,6 @@ import (
 	"sync"
 )
 
-type loginEnvelope struct {
-	resp     chan notify
-	token    *string
-	username *string
-	password *string
-	device   *string
-	Status
-}
-
-func newLoginEnvelope() *loginEnvelope {
-	return &loginEnvelope{make(chan notify, 1), nil, nil, nil, nil, Status_NEW}
-}
 
 type loginService struct {
 	*sync.RWMutex

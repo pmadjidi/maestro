@@ -15,11 +15,12 @@ type Service interface {
 type appCommands struct {
 	loginQ    chan *loginEnvelope
 	registerQ chan *registerEnvelope
-	msgSendQ      chan *msgEnvelope
-	msgRecQ      chan *msgEnvelope
-	topicSub     chan *topicEnvelope
-	topicUnSub    chan *topicEnvelope
-	topicList chan *topicEnvelope
+	userQ  chan *userEnvelope
+	timeLineQ      chan *msgEnvelope
+	msgQ      chan *msgEnvelope
+	topicSubQ     chan *topicEnvelope
+	topicUnSubQ    chan *topicEnvelope
+	topicListQ chan *topicEnvelope
 	UserDbQ   chan []*User
 	MsgDBQ    chan []*Message
 }
@@ -28,6 +29,7 @@ func newAppCommands(cfg *ServerConfig) *appCommands {
 	return &appCommands{
 		make(chan *loginEnvelope, cfg.SERVER_QEUEU_LENGTH),
 		make(chan *registerEnvelope, cfg.SERVER_QEUEU_LENGTH),
+		make(chan *userEnvelope),
 		make(chan *msgEnvelope, cfg.SERVER_QEUEU_LENGTH),
 		make(chan *msgEnvelope, cfg.SERVER_QEUEU_LENGTH),
 		make(chan *topicEnvelope, cfg.SERVER_QEUEU_LENGTH),
@@ -101,16 +103,17 @@ func (a *App) log(message string) {
 func (a *App) StopLoginService() {
 	close(a.loginQ)
 	close(a.registerQ)
-	close(a.msgSendQ)
-	close(a.topicUnSub)
-	close(a.topicSub)
+	close(a.timeLineQ)
+	close(a.userQ)
 	a.log("Stoping user manger")
 }
 
 
 
 func (a *App) StopMessageService() {
-	close(a.msgRecQ)
+	close(a.msgQ)
+	close(a.topicUnSubQ)
+	close(a.topicSubQ)
 	a.log("Stoping messaging service")
 }
 

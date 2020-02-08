@@ -11,18 +11,14 @@ message Topic{
 }
 
 
-message Topics{
+
+message TopicReq{
     repeated Topic list = 1;
 }
 
 
-message TopicReq{
-    Topics list = 1;
-}
-
-
 message TopicResp{
-    Topics list = 1;
+    repeated Topic list = 1;
 }
 
 service Subscriptions {

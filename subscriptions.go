@@ -7,14 +7,7 @@ import (
 	"sync"
 )
 
-type topicEnvelope struct {
-	*TopicReq
-	resp chan notify
-}
 
-func newTopicEnvelope() *topicEnvelope {
-	return &topicEnvelope{nil, make(chan notify)}
-}
 
 /*
 type SubscriptionsServer interface {
@@ -45,6 +38,8 @@ func newTopicService(s *Server) *topicService {
 func (t *topicService) Sub(ctx context.Context, req *TopicReq) (*TopicResp, error) {
 
 	appName := ctx.Value("appName").(string)
+	userName := ctx.Value("userName").(string)
+
 	app, err := t.system.GetOrCreateApp(appName, false)
 
 	if err != nil {
@@ -53,9 +48,10 @@ func (t *topicService) Sub(ctx context.Context, req *TopicReq) (*TopicResp, erro
 
 	env := newTopicEnvelope()
 	env.TopicReq = req
+	env.Username = userName
 
 	select {
-	case app.topicSub <- env:
+	case app.topicSubQ <- env:
 	case <-ctx.Done():
 		err := ctx.Err()
 		fmt.Printf(": %+v\n", err)
@@ -78,6 +74,7 @@ func (t *topicService) Sub(ctx context.Context, req *TopicReq) (*TopicResp, erro
 func (t *topicService) Unsub(ctx context.Context, req *TopicReq) (*TopicResp, error) {
 
 	appName := ctx.Value("appName").(string)
+	userName := ctx.Value("userName").(string)
 	app, err := t.system.GetOrCreateApp(appName, false)
 
 	if err != nil {
@@ -86,9 +83,11 @@ func (t *topicService) Unsub(ctx context.Context, req *TopicReq) (*TopicResp, er
 
 	env := newTopicEnvelope()
 	env.TopicReq = req
+	env.Username = userName
+
 
 	select {
-	case app.topicUnSub <- env:
+	case app.topicUnSubQ <- env:
 	case <-ctx.Done():
 		err := ctx.Err()
 		fmt.Printf(": %+v\n", err)
@@ -112,6 +111,7 @@ func (t *topicService) Unsub(ctx context.Context, req *TopicReq) (*TopicResp, er
 func (t *topicService) List(ctx context.Context, none *Empty) (*TopicResp, error) {
 
 	appName := ctx.Value("appName").(string)
+	userName := ctx.Value("userName").(string)
 	app, err := t.system.GetOrCreateApp(appName, false)
 
 	if err != nil {
@@ -119,10 +119,11 @@ func (t *topicService) List(ctx context.Context, none *Empty) (*TopicResp, error
 	}
 
 	env := newTopicEnvelope()
+	env.Username = userName
 
 
 	select {
-	case app.topicList <- env:
+	case app.topicListQ <- env:
 	case <-ctx.Done():
 		err := ctx.Err()
 		fmt.Printf(": %+v\n", err)
