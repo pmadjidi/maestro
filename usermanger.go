@@ -84,13 +84,13 @@ loop:
 		case env, ok := <-a.registerQ:
 			if ok {
 				if len(a.udb) > a.cfg.MAX_NUMBER_OF_USERS {
-					env.status = Status_MAXIMUN_NUMBER_OF_USERS_REACHED
+					env.Status = Status_MAXIMUN_NUMBER_OF_USERS_REACHED
 				} else {
 					req := <-env.req
 					_, exists := a.udb[req.UserName]
 					if exists {
 						fmt.Printf("User %+v exists\n", req)
-						env.status = Status_EXITSTS
+						env.Status = Status_EXITSTS
 					} else {
 						newUser := newUser(req)
 						newUser.status.Set(DIRTY)
@@ -98,10 +98,10 @@ loop:
 						token, err := a.issueToken(req.GetUserName(), req.GetDevice())
 						if err != nil {
 							fmt.Printf("Error %+v", err)
-							env.status = Status_NOAUTH
+							env.Status = Status_NOAUTH
 						} else {
 							env.token = &token
-							env.status = Status_SUCCESS
+							env.Status = Status_SUCCESS
 						}
 					}
 					env.resp <- notify{}
@@ -135,6 +135,7 @@ loop:
 				if !ok {
 					env.Status = Status_INVALID_USERNAME
 				} else {
+					env.Status = Status_SUCCESS
 					env.User = aUser
 					env.resp <- notify{}
 				}

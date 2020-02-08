@@ -68,6 +68,10 @@ func (t *topicService) Sub(ctx context.Context, req *TopicReq) (*TopicResp, erro
 		return nil, fmt.Errorf(Status_TIMEOUT.String())
 	}
 
+	if env.Status != Status_SUCCESS {
+		return nil,fmt.Errorf(env.Status.String())
+	}
+
 	return &TopicResp{List: env.List},nil
 }
 
@@ -104,6 +108,10 @@ func (t *topicService) Unsub(ctx context.Context, req *TopicReq) (*TopicResp, er
 		return nil, fmt.Errorf(Status_TIMEOUT.String())
 	}
 
+	if env.Status != Status_SUCCESS {
+		return nil,fmt.Errorf(env.Status.String())
+	}
+
 	return &TopicResp{List: env.List},nil
 }
 
@@ -138,6 +146,10 @@ func (t *topicService) List(ctx context.Context, none *Empty) (*TopicResp, error
 		fmt.Printf("Register, in error to kernel: %+v\n", err)
 		t.stats.timeouts += 1
 		return nil, fmt.Errorf(Status_TIMEOUT.String())
+	}
+
+	if env.Status != Status_SUCCESS {
+		return nil,fmt.Errorf(env.Status.String())
 	}
 
 	return &TopicResp{List: env.List},nil

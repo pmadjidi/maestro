@@ -47,7 +47,7 @@ func Test_Subscriptions(t *testing.T) {
 	ctx := context.Background()
 	ctx = metadata.AppendToOutgoingContext(ctx, "bearer-bin", token)
 
-	resp,err := c.Sub(ctx,&TopicReq{List: &Topics{List: ts}})
+	resp,err := c.Sub(ctx,&TopicReq{List: ts})
 
 	if err != nil {
 		fmt.Printf("Error %s",err.Error())

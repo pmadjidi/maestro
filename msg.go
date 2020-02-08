@@ -120,7 +120,7 @@ func (m *msgService) Put(srv Msg_PutServer) error {
 		e.messages = append(e.messages, newMsg)
 
 		select {
-		case app.msgRecQ <- e:
+		case app.msgQ <- e:
 		default:
 		}
 

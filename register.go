@@ -93,7 +93,6 @@ func (r *registerService) Register(ctx context.Context, req *RegisterReq) (*Empt
 
 
 	env := newRegisterEnvelope()
-	env.ctx = &ctx
 	env.req <- req
 
 	select {
@@ -108,7 +107,7 @@ func (r *registerService) Register(ctx context.Context, req *RegisterReq) (*Empt
 
 	select {
 	case  <-env.resp:
-		switch env.status {
+		switch env.Status {
 		case   Status_ERROR:
 			r.Lock()
 			r.stats.errors += 1

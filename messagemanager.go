@@ -48,7 +48,7 @@ loop:
 				env.resp <- notify{}
 			} else {
 				signalmsgReQ = true
-				if signalmsgReQ && signalTopicSub && signalTopicUnSub{
+				if signalmsgReQ && signalTopicSub && signalTopicUnSub {
 					break loop
 				}
 			}
@@ -82,14 +82,18 @@ loop:
 				newEnv := newUserEnvelope()
 				newEnv.Name = env.Username
 				a.userQ <- newEnv
-				<- newEnv.resp
-				for _,t := range env.List {
-					_ ,ok :=  a.subscriptions[t.Tag]
-					if ok {
-						a.subscriptions[t.Tag] = append(a.subscriptions[t.Tag],newEnv.User)
-					} else {
-						a.subscriptions[t.Tag] = append(make([]*User,0),newEnv.User)
+				<-newEnv.resp
+				if newEnv.Status == Status_SUCCESS {
+					for _, t := range env.List {
+						_, ok := a.subscriptions[t.Tag]
+						if ok {
+							a.subscriptions[t.Tag] = append(a.subscriptions[t.Tag], newEnv.User)
+						} else {
+							a.subscriptions[t.Tag] = append(make([]*User, 0), newEnv.User)
+						}
 					}
+				} else {
+					env.Status = newEnv.Status
 				}
 				env.resp <- notify{}
 			} else {
@@ -97,7 +101,26 @@ loop:
 			}
 		case env, ok := <-a.topicUnSubQ:
 			if ok {
-				
+				newEnv := newUserEnvelope()
+				newEnv.Name = env.Username
+				a.userQ <- newEnv
+				<-newEnv.resp
+				if newEnv.Status == Status_SUCCESS {
+					for _, t := range env.List {
+						subscribers, ok := a.subscriptions[t.Tag]
+						if ok {
+							for i,user := range subscribers {
+								if user == newEnv.User {
+									subscribers[i] = subscribers[len(subscribers)-1] // Copy last element to index i
+									subscribers[len(subscribers)-1] = nil   // Erase last element (write zero value)
+									subscribers = subscribers[:len(subscribers)-1]   // Truncate slice
+								}
+							}
+						}
+					}
+				} else {
+					env.Status = newEnv.Status
+				}
 				env.resp <- notify{}
 			} else {
 				signalTopicUnSub = true

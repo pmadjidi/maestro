@@ -5,20 +5,22 @@ import . "maestro/api"
 type appEnvelope struct {
 	appName string
 	app     chan *App
+	Status
 }
 
 func newAppEnvelope(appName string) *appEnvelope {
-	return &appEnvelope{appName, make(chan *App, 1)}
+	return &appEnvelope{appName, make(chan *App, 1),Status_NEW}
 }
 
 type topicEnvelope struct {
 	*TopicReq
 	Username string
 	resp chan notify
+	Status
 }
 
 func newTopicEnvelope() *topicEnvelope {
-	return &topicEnvelope{nil, nil,make(chan notify)}
+	return &topicEnvelope{nil, "",make(chan notify),Status_NEW}
 }
 
 
@@ -26,7 +28,7 @@ type registerEnvelope struct {
 	req  chan *RegisterReq
 	resp chan notify
 	token  *string
-	status Status
+	Status
 }
 
 
@@ -51,7 +53,7 @@ type userEnvelope struct {
 	Name string
 	User *User
 	resp chan notify
-	Status Status
+	Status
 }
 
 func newUserEnvelope () *userEnvelope {
