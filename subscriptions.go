@@ -48,7 +48,7 @@ func (t *topicService) Sub(ctx context.Context, req *TopicReq) (*TopicResp, erro
 
 	env := newTopicEnvelope()
 	env.TopicReq = req
-	env.Username = userName
+	env.Username = &userName
 
 	select {
 	case app.topicSubQ <- env:
@@ -71,7 +71,6 @@ func (t *topicService) Sub(ctx context.Context, req *TopicReq) (*TopicResp, erro
 	if env.Status != Status_SUCCESS {
 		return nil,fmt.Errorf(env.Status.String())
 	}
-
 	return &TopicResp{List: env.List,},nil
 }
 
@@ -87,7 +86,7 @@ func (t *topicService) Unsub(ctx context.Context, req *TopicReq) (*TopicResp, er
 
 	env := newTopicEnvelope()
 	env.TopicReq = req
-	env.Username = userName
+	env.Username = &userName
 
 
 	select {
@@ -127,7 +126,7 @@ func (t *topicService) List(ctx context.Context, none *Empty) (*TopicResp, error
 	}
 
 	env := newTopicEnvelope()
-	env.Username = userName
+	env.Username = &userName
 
 
 	select {

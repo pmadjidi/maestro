@@ -14,13 +14,13 @@ func newAppEnvelope(appName string) *appEnvelope {
 
 type topicEnvelope struct {
 	*TopicReq
-	Username string
+	Username *string
 	resp chan notify
 	Status
 }
 
 func newTopicEnvelope() *topicEnvelope {
-	return &topicEnvelope{nil, "",make(chan notify),Status_NEW}
+	return &topicEnvelope{nil, nil,make(chan notify),Status_NEW}
 }
 
 
@@ -50,14 +50,14 @@ func newLoginEnvelope() *loginEnvelope {
 }
 
 type userEnvelope struct {
-	Name string
+	Username *string
 	User *User
 	resp chan notify
 	Status
 }
 
 func newUserEnvelope () *userEnvelope {
-	return &userEnvelope{"",nil,make(chan notify,1),Status_NEW}
+	return &userEnvelope{nil,nil,make(chan notify,1),Status_NEW}
 }
 
 

@@ -32,8 +32,10 @@ func newMessage(msgreq *MsgReq) *Message {
 	return m
 }
 
+
 type messagesdb struct {
 	msg             map[string]map[string]*Message
+	topics  			map[*Topic]Status
 	subscriptions   map[string][]*User
 	mdirty          []*Message
 	mblocked        []*Message
@@ -43,6 +45,7 @@ type messagesdb struct {
 
 func newMessageDb() *messagesdb {
 	return &messagesdb{make(map[string]map[string]*Message),
+		make(map[*Topic]Status),
 		make(map[string][]*User),
 		make([]*Message, 0), make([]*Message, 0), 0, 0}
 }

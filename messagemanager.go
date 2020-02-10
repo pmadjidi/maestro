@@ -80,7 +80,7 @@ loop:
 		case env, ok := <-a.topicSubQ:
 			if ok {
 				newEnv := newUserEnvelope()
-				newEnv.Name = env.Username
+				newEnv.Username = env.Username
 				a.userQ <- newEnv
 				<-newEnv.resp
 				if newEnv.Status == Status_SUCCESS {
@@ -90,8 +90,8 @@ loop:
 							a.subscriptions[t.Tag] = append(a.subscriptions[t.Tag], newEnv.User)
 						} else {
 							a.subscriptions[t.Tag] = append(make([]*User, 0), newEnv.User)
+							a.topics[t] = Status_NEW
 						}
-						t.Status = Status_SUCCESS
 					}
 					env.Status = Status_SUCCESS
 				} else {
@@ -104,7 +104,7 @@ loop:
 		case env, ok := <-a.topicUnSubQ:
 			if ok {
 				newEnv := newUserEnvelope()
-				newEnv.Name = env.Username
+				newEnv.Username = env.Username
 				a.userQ <- newEnv
 				<-newEnv.resp
 				if newEnv.Status == Status_SUCCESS {
@@ -119,7 +119,6 @@ loop:
 								}
 							}
 						}
-						t.Status = Status_SUCCESS
 					}
 					env.Status = Status_SUCCESS
 				} else {
@@ -129,6 +128,21 @@ loop:
 			} else {
 				signalTopicUnSub = true
 			}
+
+		case env, ok := <-a.topicListQ:
+			if ok {
+				topics := make([]*Topic,0)
+				for k,_ := range a.topics {
+					topics = append(topics,k)
+				}
+				env.List = topics
+				env.resp <- notify{}
+			} else {
+				signalTopicUnSub = true
+			}
+
+
+
 
 		case <-a.quit:
 			break loop

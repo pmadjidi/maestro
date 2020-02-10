@@ -131,7 +131,7 @@ loop:
 
 		case env, ok := <-a.userQ:
 			if ok {
-				aUser, ok := a.udb[env.Name]
+				aUser, ok := a.udb[*env.Username]
 				if !ok {
 					env.Status = Status_INVALID_USERNAME
 				} else {

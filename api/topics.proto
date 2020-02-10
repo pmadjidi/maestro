@@ -1,13 +1,11 @@
 syntax = "proto3";
 package api;
 
-import "status.proto";
 import "register.proto";
 
 message Topic{
     string id = 1;
     string tag = 2;
-    Status status = 3;
 }
 
 

@@ -12,13 +12,10 @@ import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'register.pb.dart' as $3;
 
-import 'status.pbenum.dart' as $0;
-
 class Topic extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo('Topic', package: const $pb.PackageName('api'), createEmptyInstance: create)
     ..aOS(1, 'id')
     ..aOS(2, 'tag')
-    ..e<$0.Status>(3, 'status', $pb.PbFieldType.OE, defaultOrMaker: $0.Status.SUCCESS, valueOf: $0.Status.valueOf, enumValues: $0.Status.values)
     ..hasRequiredFields = false
   ;
 
@@ -54,15 +51,6 @@ class Topic extends $pb.GeneratedMessage {
   $core.bool hasTag() => $_has(1);
   @$pb.TagNumber(2)
   void clearTag() => clearField(2);
-
-  @$pb.TagNumber(3)
-  $0.Status get status => $_getN(2);
-  @$pb.TagNumber(3)
-  set status($0.Status v) { setField(3, v); }
-  @$pb.TagNumber(3)
-  $core.bool hasStatus() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearStatus() => clearField(3);
 }
 
 class TopicReq extends $pb.GeneratedMessage {
