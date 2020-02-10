@@ -121,3 +121,90 @@ func Test_Msg(t *testing.T) {
 	fmt.Printf("Success\n")
 
 }
+
+
+func Test_Timeline(t *testing.T) {
+
+	postfix := 10002
+	token, appName, err := createUser(postfix, "theRightPassword")
+	if err != nil {
+		t.Errorf("Should not fail creating a user.. %+v\n", err)
+	} else {
+		fmt.Printf("token[%s] app[%s]\n", token, appName)
+	}
+
+
+	numberOfMessages := 1000
+
+
+	var reciveFail chan *error
+
+	reciveFail = make(chan *error, numberOfMessages)
+
+	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		t.Logf(err.Error())
+		t.Fail()
+	}
+	defer conn.Close()
+	c := NewMsgClient(conn)
+
+
+	fmt.Printf("Before stream")
+
+	//ctx, _ := context.WithTimeout(context.Background(),10 * time.Second)
+	ctx := context.Background()
+	ctx = metadata.AppendToOutgoingContext(ctx, "bearer-bin", token, "app", appName,"username","calle1002")
+	//defer cancel()
+
+	stream, err := c.TimeLine(ctx,&Empty{})
+	if err != nil {
+		t.Logf(err.Error())
+		t.Fail()
+	}
+	defer stream.CloseSend()
+
+	fmt.Printf("After stream\n")
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	fmt.Printf("Before go functions\n")
+
+
+	go func() {
+		defer wg.Done()
+		defer close(reciveFail)
+		fmt.Printf("In go function for Rec\n")
+		for {
+			q, err := stream.Recv()
+
+			if err != nil  {
+				fmt.Printf("Recive Error Client [%s]\n", err.Error())
+				if err == io.EOF {
+					return
+				}
+				reciveFail <- &err
+				return
+			} else {
+				fmt.Printf("Recieved Status[%s] for Message[%s]\n", q.Status.String(), q.Uuid)
+			}
+		}
+	}()
+
+	fmt.Printf("Waiting for go functions to terminate\n")
+
+	wg.Wait()
+
+
+	for e := range reciveFail {
+		if e != nil {
+			t.Logf(err.Error())
+			t.Fatal()
+		}
+	}
+
+	fmt.Printf("Success\n")
+
+}
+

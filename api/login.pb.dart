@@ -10,7 +10,7 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'register.pb.dart' as $3;
+import 'status.pb.dart' as $0;
 
 class LoginReq extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo('LoginReq', package: const $pb.PackageName('api'), createEmptyInstance: create)
@@ -47,9 +47,9 @@ class LoginApi {
   $pb.RpcClient _client;
   LoginApi(this._client);
 
-  $async.Future<$3.Empty> authenticate($pb.ClientContext ctx, LoginReq request) {
-    var emptyResponse = $3.Empty();
-    return _client.invoke<$3.Empty>(ctx, 'Login', 'Authenticate', request, emptyResponse);
+  $async.Future<$0.Empty> authenticate($pb.ClientContext ctx, LoginReq request) {
+    var emptyResponse = $0.Empty();
+    return _client.invoke<$0.Empty>(ctx, 'Login', 'Authenticate', request, emptyResponse);
   }
 }
 

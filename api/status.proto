@@ -28,3 +28,7 @@ enum Status {
     INVALID_APPNAME = 23;
     INVALID_TOKEN = 24;
 }
+
+
+message Empty{
+}

@@ -32,10 +32,9 @@ func newMessage(msgreq *MsgReq) *Message {
 	return m
 }
 
-
 type messagesdb struct {
 	msg             map[string]map[string]*Message
-	topics  			map[*Topic]Status
+	topics          map[*Topic]Status
 	subscriptions   map[string][]*User
 	mdirty          []*Message
 	mblocked        []*Message
@@ -51,7 +50,7 @@ func newMessageDb() *messagesdb {
 }
 
 func newMsgEnvelope() *msgEnvelope {
-	return &msgEnvelope{nil, make(chan notify,1), "", Status_NEW}
+	return &msgEnvelope{nil, make(chan notify, 1), "", Status_NEW}
 }
 
 type msgService struct {
@@ -142,5 +141,58 @@ func (m *msgService) Put(srv Msg_PutServer) error {
 	m.system.log("Returning from put")
 
 	return nil
-
 }
+
+func (m *msgService) TimeLine(req *Empty, srv Msg_TimeLineServer) error {
+
+	var appName []string
+	var userName []string
+	ctx := srv.Context()
+
+	md, val := metadata.FromIncomingContext(ctx)
+	PrettyPrint(md)
+	if val {
+		appName = md.Get("app")
+		userName = md.Get("username")
+		if len(appName) < 1 && appName[0] != "" {
+			return fmt.Errorf(Status_INVALID_APPNAME.String())
+		}
+		if len(userName) < 1 && userName[0] != "" {
+			return fmt.Errorf(Status_INVALID_USERNAME.String())
+		}
+	} else {
+		return fmt.Errorf(Status_NOAUTH.String())
+	}
+
+	app, err := m.system.GetOrCreateApp(appName[0], false)
+	if err != nil {
+		m.system.log(err.Error())
+		return err
+	}
+
+	e := newMsgEnvelope()
+	e.userName = userName[0]
+
+	select {
+	case <-ctx.Done():
+		m.system.log("CTX timeout")
+		return ctx.Err()
+	case app.timeLineQ <- e:
+	}
+
+
+	select {
+	case <-ctx.Done():
+		m.system.log("CTX timeout")
+		return ctx.Err()
+	case <-e.resp:
+	}
+	
+	for _, msq := range e.messages {
+		srv.Send(msq.MsgReq)
+	}
+
+	return nil
+}
+
+

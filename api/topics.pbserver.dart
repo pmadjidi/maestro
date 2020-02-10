@@ -11,7 +11,7 @@ import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'dart:core' as $core;
 import 'topics.pb.dart' as $6;
-import 'register.pb.dart' as $3;
+import 'status.pb.dart' as $0;
 import 'topics.pbjson.dart';
 
 export 'topics.pb.dart';
@@ -19,13 +19,13 @@ export 'topics.pb.dart';
 abstract class SubscriptionsServiceBase extends $pb.GeneratedService {
   $async.Future<$6.TopicResp> sub($pb.ServerContext ctx, $6.TopicReq request);
   $async.Future<$6.TopicResp> unsub($pb.ServerContext ctx, $6.TopicReq request);
-  $async.Future<$6.TopicResp> list($pb.ServerContext ctx, $3.Empty request);
+  $async.Future<$6.TopicResp> list($pb.ServerContext ctx, $0.Empty request);
 
   $pb.GeneratedMessage createRequest($core.String method) {
     switch (method) {
       case 'sub': return $6.TopicReq();
       case 'unsub': return $6.TopicReq();
-      case 'list': return $3.Empty();
+      case 'list': return $0.Empty();
       default: throw $core.ArgumentError('Unknown method: $method');
     }
   }

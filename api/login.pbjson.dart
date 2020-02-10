@@ -5,7 +5,7 @@
 // @dart = 2.3
 // ignore_for_file: camel_case_types,non_constant_identifier_names,library_prefixes,unused_import,unused_shown_name,return_of_invalid_type
 
-import 'register.pbjson.dart' as $3;
+import 'status.pbjson.dart' as $0;
 
 const LoginReq$json = const {
   '1': 'LoginReq',
@@ -23,6 +23,6 @@ const LoginServiceBase$json = const {
 
 const LoginServiceBase$messageJson = const {
   '.api.LoginReq': LoginReq$json,
-  '.api.Empty': $3.Empty$json,
+  '.api.Empty': $0.Empty$json,
 };
 

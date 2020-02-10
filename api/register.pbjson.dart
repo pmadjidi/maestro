@@ -5,7 +5,8 @@
 // @dart = 2.3
 // ignore_for_file: camel_case_types,non_constant_identifier_names,library_prefixes,unused_import,unused_shown_name,return_of_invalid_type
 
-import 'google/protobuf/timestamp.pbjson.dart' as $2;
+import 'google/protobuf/timestamp.pbjson.dart' as $3;
+import 'status.pbjson.dart' as $0;
 
 const RegisterReq$json = const {
   '1': 'RegisterReq',
@@ -34,10 +35,6 @@ const RegisterReq_Address$json = const {
   ],
 };
 
-const Empty$json = const {
-  '1': 'Empty',
-};
-
 const RegisterServiceBase$json = const {
   '1': 'Register',
   '2': const [
@@ -48,7 +45,7 @@ const RegisterServiceBase$json = const {
 const RegisterServiceBase$messageJson = const {
   '.api.RegisterReq': RegisterReq$json,
   '.api.RegisterReq.Address': RegisterReq_Address$json,
-  '.google.protobuf.Timestamp': $2.Timestamp$json,
-  '.api.Empty': Empty$json,
+  '.google.protobuf.Timestamp': $3.Timestamp$json,
+  '.api.Empty': $0.Empty$json,
 };
 

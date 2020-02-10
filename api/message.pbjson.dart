@@ -5,7 +5,8 @@
 // @dart = 2.3
 // ignore_for_file: camel_case_types,non_constant_identifier_names,library_prefixes,unused_import,unused_shown_name,return_of_invalid_type
 
-import 'google/protobuf/timestamp.pbjson.dart' as $2;
+import 'google/protobuf/timestamp.pbjson.dart' as $3;
+import 'status.pbjson.dart' as $0;
 
 const MsgReq$json = const {
   '1': 'MsgReq',
@@ -32,12 +33,14 @@ const MsgServiceBase$json = const {
   '1': 'Msg',
   '2': const [
     const {'1': 'put', '2': '.api.MsgReq', '3': '.api.MsgResp', '5': true, '6': true},
+    const {'1': 'timeLine', '2': '.api.Empty', '3': '.api.MsgReq', '6': true},
   ],
 };
 
 const MsgServiceBase$messageJson = const {
   '.api.MsgReq': MsgReq$json,
-  '.google.protobuf.Timestamp': $2.Timestamp$json,
+  '.google.protobuf.Timestamp': $3.Timestamp$json,
   '.api.MsgResp': MsgResp$json,
+  '.api.Empty': $0.Empty$json,
 };
 

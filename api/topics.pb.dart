@@ -10,7 +10,7 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'register.pb.dart' as $3;
+import 'status.pb.dart' as $0;
 
 class Topic extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo('Topic', package: const $pb.PackageName('api'), createEmptyInstance: create)
@@ -115,7 +115,7 @@ class SubscriptionsApi {
     var emptyResponse = TopicResp();
     return _client.invoke<TopicResp>(ctx, 'Subscriptions', 'unsub', request, emptyResponse);
   }
-  $async.Future<TopicResp> list($pb.ClientContext ctx, $3.Empty request) {
+  $async.Future<TopicResp> list($pb.ClientContext ctx, $0.Empty request) {
     var emptyResponse = TopicResp();
     return _client.invoke<TopicResp>(ctx, 'Subscriptions', 'list', request, emptyResponse);
   }

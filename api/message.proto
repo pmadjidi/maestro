@@ -23,4 +23,5 @@ message MsgResp {
 
 service Msg {
     rpc put(stream MsgReq) returns (stream MsgResp);
+    rpc timeLine(Empty) returns (stream MsgReq);
 }

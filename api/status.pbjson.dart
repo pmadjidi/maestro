@@ -36,3 +36,7 @@ const Status$json = const {
   ],
 };
 
+const Empty$json = const {
+  '1': 'Empty',
+};
+

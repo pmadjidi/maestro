@@ -1,6 +1,7 @@
 syntax = "proto3";
 package api;
 
+import "status.proto";
 import "google/protobuf/timestamp.proto";
 
 message RegisterReq{
@@ -22,9 +23,6 @@ message RegisterReq{
     string AppName = 10;
 }
 
-
-message Empty{
-}
 
 
 service Register {
