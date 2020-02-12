@@ -46,6 +46,39 @@ func TestLoginFail(t *testing.T) {
 	}
 }
 
+func createCustomUser(uname,password,appname string ) (string,string,error) {
+	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+	defer conn.Close()
+	r := NewRegisterClient(conn)
+	req := &RegisterReq{UserName: uname,
+		PassWord:  []byte(password),
+		FirstName:  "Adam",
+		LastName:  "Svensson" ,
+		Email:     uname + "@gmail.com",
+		Phone:     "08-121823324" ,
+		Address:   &RegisterReq_Address{Street: "Tomtebogatan ", City: "Stockholm", State: "Sweden", Zip: "113 "},
+		Device:    "device-test",
+		AppName:   appname,}
+
+	var header, trailer metadata.MD
+	_, err = r.Register(
+		context.Background(),
+		req,
+		grpc.Header(&header),
+		grpc.Trailer(&trailer),  )
+	if err == nil {
+		token := header.Get("bearer-bin")[0]
+		app := header.Get("app")[0]
+		return token,app,nil
+	}
+
+	return "","",err
+}
+
+
 func createUser(postfix int, password string) (string,string,error) {
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {

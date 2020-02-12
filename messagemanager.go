@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	. "maestro/api"
 	"time"
 )
@@ -20,6 +21,11 @@ loop:
 					_, ok := a.msg[m.Topic]
 					if !ok {
 						if len(a.msg) < a.cfg.MAX_NUMBER_OF_TOPICS {
+							topic  := &Topic{
+								Id:                   uuid.New().String(),
+								Tag:                  m.Topic,
+							}
+							a.topics[topic] = Status_NEW
 							a.msg[m.Topic] = make(map[string]*Message, 0)
 						} else {
 							env.Status = Status_MAXIMUN_NUMBER_OF_TOPICS_REACHED
@@ -135,6 +141,7 @@ loop:
 				for k,_ := range a.topics {
 					topics = append(topics,k)
 				}
+				env.Status = Status_SUCCESS
 				env.List = topics
 				env.resp <- notify{}
 			} else {

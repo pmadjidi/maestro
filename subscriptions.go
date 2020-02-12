@@ -148,6 +148,7 @@ func (t *topicService) List(ctx context.Context, none *Empty) (*TopicResp, error
 	}
 
 	if env.Status != Status_SUCCESS {
+		t.system.log("Error in subscription list")
 		return nil,fmt.Errorf(env.Status.String())
 	}
 

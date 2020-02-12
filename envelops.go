@@ -20,7 +20,7 @@ type topicEnvelope struct {
 }
 
 func newTopicEnvelope() *topicEnvelope {
-	return &topicEnvelope{nil, nil,make(chan notify),Status_NEW}
+	return &topicEnvelope{&TopicReq{}, nil,make(chan notify),Status_NEW}
 }
 
 

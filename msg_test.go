@@ -180,10 +180,10 @@ func Test_Timeline(t *testing.T) {
 			q, err := stream.Recv()
 
 			if err != nil  {
-				fmt.Printf("Recive Error Client [%s]\n", err.Error())
 				if err == io.EOF {
 					return
 				}
+				fmt.Printf("Recive Error Client [%s]\n", err.Error())
 				reciveFail <- &err
 				return
 			} else {

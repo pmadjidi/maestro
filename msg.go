@@ -187,7 +187,7 @@ func (m *msgService) TimeLine(req *Empty, srv Msg_TimeLineServer) error {
 		return ctx.Err()
 	case <-e.resp:
 	}
-	
+
 	for _, msq := range e.messages {
 		srv.Send(msq.MsgReq)
 	}

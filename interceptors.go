@@ -36,8 +36,7 @@ func getJwtToken(authorization []string,secret string) (jwt.MapClaims,error) {
 func createUniaryInterCeptor(cfg *ServerConfig) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		method := info.FullMethod
-		if method != "/api.Register/Register" && method != "/api.Login/Authenticate" && method != "/api.Message/Msg" {
-
+		if method != "/api.Register/Register" && method != "/api.Login/Authenticate" {
 			md, ok := metadata.FromIncomingContext(ctx)
 			if !ok {
 				return nil, errors.New(Status_INVALID_TOKEN.String())
@@ -52,6 +51,9 @@ func createUniaryInterCeptor(cfg *ServerConfig) grpc.UnaryServerInterceptor {
 
 		m, err := handler(ctx, req)
 		if err != nil {
+			Info("In here...")
+			PrettyPrint(handler)
+			PrettyPrint(info)
 			Info("RPC failed with error %v\n", err)
 		}
 		return m, err
