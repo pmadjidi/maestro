@@ -18,7 +18,7 @@ import (
 
 func Test_SubscriptionsCreaateTopic(t *testing.T) {
 
-	postfix := 10001
+	postfix := 100000
 	token, appName, err := createUser(postfix, "theRightPassword")
 	if err != nil {
 		t.Errorf("Should not fail creating a user.. %+v\n", err)
@@ -50,7 +50,7 @@ func Test_SubscriptionsCreaateTopic(t *testing.T) {
 	resp,err := c.Sub(ctx,&TopicReq{List: ts})
 
 	if err != nil {
-		fmt.Printf("Error %s",err.Error())
+		t.Logf("Error %s",err.Error())
 		t.Fail()
 
 	} else {
@@ -61,7 +61,7 @@ func Test_SubscriptionsCreaateTopic(t *testing.T) {
 
 func Test_SubscriptionsList(t *testing.T) {
 
-	postfix := 10002
+	postfix := 100001
 	token, appName, err := createUser(postfix, "theRightPassword")
 	if err != nil {
 		t.Errorf("Should not fail creating a user.. %+v\n", err)
@@ -99,7 +99,7 @@ func Test_SubscriptionsList(t *testing.T) {
 	resp,err := c.Sub(ctx,&TopicReq{List: ts})
 
 	if err != nil {
-		fmt.Printf("Error %s",err.Error())
+		t.Logf("Error %s",err.Error())
 		t.Fail()
 
 		resp,err = c.List(ctx,&Empty{})
@@ -113,12 +113,13 @@ func Test_SubscriptionsList(t *testing.T) {
 
 func Test_SubscriptionsPublishAndList(t *testing.T) {
 
-	postfix := 10003
+	postfix := 100002
 	token1, appName1, err := createUser(postfix, "theRightPassword")
 	if err != nil {
-		t.Errorf("Should not fail creating a user.. %+v\n", err)
+		t.Logf("Should not fail creating a user.. %+v\n", err)
+		t.Fail()
 	} else {
-		fmt.Printf("token[%s] app[%s]\n", token1, appName1)
+		t.Logf("token[%s] app[%s]\n", token1, appName1)
 	}
 
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
@@ -174,18 +175,16 @@ func Test_SubscriptionsPublishAndList(t *testing.T) {
 
 	//ctx, _ := context.WithTimeout(context.Background(),10 * time.Second)
 	ctx := context.Background()
-	ctx = metadata.AppendToOutgoingContext(ctx, "bearer-bin",token1,"username","kalle10003","app",appName1)
+	ctx = metadata.AppendToOutgoingContext(ctx, "bearer-bin",token1,"username","kalle100002","app",appName1)
 	PrettyPrint(ctx)
 
 	resp,err := s.Sub(ctx,&TopicReq{List: ts})
 
 	if err != nil {
-		fmt.Printf("Error %s",err.Error())
+		t.Logf("Error %s",err.Error())
 		t.Fail()
-
-		resp,err = s.List(ctx,&Empty{})
-
 	} else {
+		resp,err = s.List(ctx,&Empty{})
 		PrettyPrint(resp)
 	}
 
@@ -217,7 +216,7 @@ func Test_SubscriptionsPublishAndList(t *testing.T) {
 		for _, m := range msgs {
 			err := stream.Send(m)
 			if err != nil && err != io.EOF {
-				fmt.Printf("Send Error [%s]\n", err.Error())
+				t.Logf("Send Error [%s]\n", err.Error())
 				sendFail <- &err
 				return
 			}
@@ -282,11 +281,11 @@ func Test_SubscriptionsPublishAndList(t *testing.T) {
 			if err == io.EOF {
 				return
 			}
-			fmt.Printf("Recive Error Client [%s]\n", err.Error())
+			t.Logf("Recive Error Client [%s]\n", err.Error())
 			t.Fail()
 			return
 		} else {
-			fmt.Printf("Recieved Status[%s] for Message[%s]\n", q.Status.String(), q.Uuid)
+			t.Logf("Recieved Status[%s] for Message[%s]\n", q.Status.String(), q.Uuid)
 		}
 	}
 

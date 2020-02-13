@@ -17,9 +17,10 @@ func Test_Msg(t *testing.T) {
 	postfix := 10000
 	token, appName, err := createUser(postfix, "theRightPassword")
 	if err != nil {
-		t.Errorf("Should not fail creating a user.. %+v\n", err)
+		t.Logf("Should not fail creating a user.. %+v\n", err)
+		t.Fail()
 	} else {
-		fmt.Printf("token[%s] app[%s]\n", token, appName)
+		t.Logf("token[%s] app[%s]\n", token, appName)
 	}
 
 	cfg := createAppConfig(createServerConfig(), appName)
@@ -39,7 +40,7 @@ func Test_Msg(t *testing.T) {
 
 	msgs := randomMessageForTest(cfg.MAX_NUMBER_OF_MESSAGES_PER_TOPIC, cfg.MAX_NUMBER_OF_TOPICS)
 
-	fmt.Printf("Before stream")
+	t.Logf("Before stream")
 
 	//ctx, _ := context.WithTimeout(context.Background(),10 * time.Second)
 	ctx := context.Background()
@@ -53,7 +54,7 @@ func Test_Msg(t *testing.T) {
 	}
 	defer stream.CloseSend()
 
-	fmt.Printf("After stream\n")
+	t.Logf("After stream\n")
 
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -68,36 +69,36 @@ func Test_Msg(t *testing.T) {
 		for _, m := range msgs {
 			err := stream.Send(m)
 			if err != nil && err != io.EOF {
-				fmt.Printf("Send Error [%s]\n", err.Error())
+				t.Logf("Send Error [%s]\n", err.Error())
 				sendFail <- &err
 				return
 			}
-			fmt.Printf("Sent Message[%s][%s]\n", m.Uuid, m.Topic)
+			t.Logf("Sent Message[%s][%s]\n", m.Uuid, m.Topic)
 		}
-		fmt.Printf("Returning from go send function")
+		t.Logf("Returning from go send function")
 	}()
 
 	go func() {
 		defer wg.Done()
 		defer close(reciveFail)
-		fmt.Printf("In go function for Rec\n")
+		t.Logf("In go function for Rec\n")
 		for {
 			q, err := stream.Recv()
 
 			if err != nil  {
-				fmt.Printf("Recive Error Client [%s]\n", err.Error())
+				t.Logf("Recive Error Client [%s]\n", err.Error())
 				if err == io.EOF {
 					return
 				}
 				reciveFail <- &err
 				return
 			} else {
-				fmt.Printf("Recieved Status[%s] for Message[%s]\n", q.Status.String(), q.Uuid)
+				t.Logf("Recieved Status[%s] for Message[%s]\n", q.Status.String(), q.Uuid)
 			}
 		}
 	}()
 
-	fmt.Printf("Waiting for go functions to terminate\n")
+	t.Logf("Waiting for go functions to terminate\n")
 
 	wg.Wait()
 
@@ -118,7 +119,7 @@ func Test_Msg(t *testing.T) {
 
 
 
-	fmt.Printf("Success\n")
+	t.Logf("Success\n")
 
 }
 
@@ -129,8 +130,9 @@ func Test_Timeline(t *testing.T) {
 	token, appName, err := createUser(postfix, "theRightPassword")
 	if err != nil {
 		t.Errorf("Should not fail creating a user.. %+v\n", err)
+		t.Fail()
 	} else {
-		fmt.Printf("token[%s] app[%s]\n", token, appName)
+		t.Logf("token[%s] app[%s]\n", token, appName)
 	}
 
 
@@ -150,7 +152,7 @@ func Test_Timeline(t *testing.T) {
 	c := NewMsgClient(conn)
 
 
-	fmt.Printf("Before stream")
+	t.Logf("Before stream")
 
 	//ctx, _ := context.WithTimeout(context.Background(),10 * time.Second)
 	ctx := context.Background()
@@ -164,18 +166,18 @@ func Test_Timeline(t *testing.T) {
 	}
 	defer stream.CloseSend()
 
-	fmt.Printf("After stream\n")
+	t.Logf("After stream\n")
 
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	fmt.Printf("Before go functions\n")
+	t.Logf("Before go functions\n")
 
 
 	go func() {
 		defer wg.Done()
 		defer close(reciveFail)
-		fmt.Printf("In go function for Rec\n")
+		t.Logf("In go function for Rec\n")
 		for {
 			q, err := stream.Recv()
 
@@ -183,16 +185,16 @@ func Test_Timeline(t *testing.T) {
 				if err == io.EOF {
 					return
 				}
-				fmt.Printf("Recive Error Client [%s]\n", err.Error())
+				t.Logf("Recive Error Client [%s]\n", err.Error())
 				reciveFail <- &err
 				return
 			} else {
-				fmt.Printf("Recieved Status[%s] for Message[%s]\n", q.Status.String(), q.Uuid)
+				t.Logf("Recieved Status[%s] for Message[%s]\n", q.Status.String(), q.Uuid)
 			}
 		}
 	}()
 
-	fmt.Printf("Waiting for go functions to terminate\n")
+	t.Logf("Waiting for go functions to terminate\n")
 
 	wg.Wait()
 
@@ -204,7 +206,7 @@ func Test_Timeline(t *testing.T) {
 		}
 	}
 
-	fmt.Printf("Success\n")
+	t.Logf("Success\n")
 
 }
 
