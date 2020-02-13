@@ -24,6 +24,7 @@ type ServerConfig struct {
 	MAX_NUMBER_OF_TOPICS int
 	SYSTEM_PATH string
 	SYSTEM_QUEUE_WAIT_BEFORE_TIME_OUT time.Duration
+	SYSTEM_MONITOR_FREQUENCY time.Duration
 }
 
 type  AppConfig  struct {
@@ -176,6 +177,13 @@ func createServerConfig(systemName ...string) *ServerConfig {
 	}
 
 
+	SYSTEM_MONITOR_FREQUENCY, err := time.ParseDuration(os.Getenv("SYSTEM_MONITOR_FREQUENCY"))
+	if err != nil {
+		SYSTEM_MONITOR_FREQUENCY = 30
+		os.Setenv("SYSTEM_MONITOR_FREQUENCY","30")
+	}
+
+
 
 	return &ServerConfig{
 		SYSTEM_NAME,
@@ -195,6 +203,7 @@ func createServerConfig(systemName ...string) *ServerConfig {
 		MAX_NUMBER_OF_TOPICS,
 		SYSTEM_PATH,
 		SYSTEM_QUEUE_WAIT_BEFORE_TIME_OUT,
+		SYSTEM_MONITOR_FREQUENCY,
 	}
 }
 
